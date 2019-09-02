@@ -6,8 +6,8 @@
     "moduleResolution": "node",
     "importHelpers": true,
     "jsx": "react",
-    "esModuleInterop": false,
-    "sourceMap": false,
+    "esModuleInterop": true,
+    "sourceMap": true,
     "baseUrl": ".",
     "strict": true,
     "paths": {

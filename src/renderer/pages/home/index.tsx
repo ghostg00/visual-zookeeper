@@ -1,9 +1,9 @@
-import React from 'react';
-import { connect } from 'dva';
-import { Card, Form } from 'antd';
-import { FormComponentProps } from 'antd/lib/form';
-import { AnyAction, Dispatch } from 'redux';
-import { StateType } from '@/pages/home/model';
+import React from "react";
+import { connect } from "dva";
+import { Card, Form } from "antd";
+import { FormComponentProps } from "antd/lib/form";
+import { AnyAction, Dispatch } from "redux";
+import { StateType } from "@/pages/home/model";
 
 interface HomeProps extends FormComponentProps {
   home: StateType;
@@ -15,20 +15,20 @@ function Home(props: HomeProps) {
   return (
     <>
       <Card>怎么写？</Card>
-      <Card>要写的zookeeper 可视化工具</Card>
+      <Card>要写的zookeeper 可视化工a  具</Card>
     </>
   );
 }
 
 const mapStateToProps = ({
   home,
-  loading,
+  loading
 }: {
   home: StateType;
   loading: { models: { [key: string]: boolean } };
 }) => ({
   home,
-  loading: loading.models.home,
+  loading: loading.models.home
 });
 
-export default connect(mapStateToProps)(Form.create({ name: 'form' })(Home));
+export default connect(mapStateToProps)(Form.create({ name: "form" })(Home));

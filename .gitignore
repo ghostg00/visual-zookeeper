@@ -9,6 +9,7 @@
 
 # production
 /dist
+*.map
 
 # misc
 .DS_Store
@@ -17,3 +18,4 @@
 .umi
 .umi-production
 .idea
+/src/renderer/**/**.js

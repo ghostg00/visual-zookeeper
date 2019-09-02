@@ -15,4 +15,7 @@ module.exports = {
     extensions: ['.tsx', '.ts', '.js', '.json'],
   },
   devtool: 'source-map',
+  externals: (context, request, callback) => {
+    callback(null, request.charAt(0) === '.' ? false : `require("${request}")`);
+  },
 };

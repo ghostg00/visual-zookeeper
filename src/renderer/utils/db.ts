@@ -1,4 +1,4 @@
-import Nedb from 'nedb';
+import Nedb from "nedb";
 
 export interface BaseDoc {
   _id?: string;
@@ -8,7 +8,7 @@ class Db<T extends BaseDoc> {
   nedb: Nedb;
 
   constructor(filename?: string) {
-    this.nedb = new Nedb({ filename: filename || 'db.json', autoload: true });
+    this.nedb = new Nedb({ filename: filename || "db.json", autoload: true });
   }
 
   insert(docs: T[]) {

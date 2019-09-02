@@ -5,7 +5,7 @@
     "module": "commonjs",
     "lib": ["dom", "es2015", "es2016", "es2017"],
     "noImplicitAny": false,
-    "sourceMap": false,
+    "sourceMap": true,
     "outDir": "dist",
     "baseUrl": "./",
     "jsx": "preserve",
