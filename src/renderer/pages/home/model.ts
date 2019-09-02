@@ -1,37 +1,38 @@
 import { ZKServer } from "@/pages/home/data.d";
 import { ModelType } from "@/declare/dva";
-import Db from "@/utils/db";
+import ZkClient from "@/utils/zk-client";
 
-let db = new Db<ZKServer>("zookeeper");
+let zkClient = new ZkClient();
 
-export interface StateType {}
+export interface StateType {
+  children: string[];
+}
 
 const model: ModelType<StateType> = {
   namespace: "home",
-  state: {},
+  state: { children: [] },
 
   effects: {
-    // *fetchList({ payload, callback }, { call, put }) {
-    //   const data = yield call([db, db.find], payload.query, payload.sort);
-    //   callback && callback(data);
-    // },
-    // *fetchOne({ payload }, { call, put }) {
-    //   const data = yield call([db, db.findOne], payload);
-    //   yield put({
-    //     type: "formValue",
-    //     payload: data
-    //   });
-    // }
+    *fetchConnect({ payload, callback }, { call, put }) {
+      const data = yield call([zkClient, zkClient.connect], "localhost:2181");
+      callback && callback(data);
+    },
+    *fetchGetChildren({ payload }, { call, put }) {
+      const data = yield call([zkClient, zkClient.getChildren], "/dubbo");
+      yield put({
+        type: "getChildren",
+        payload: data
+      });
+    }
   },
 
   reducers: {
-    // formValue(state, { payload }) {
-    //   return {
-    //     ...state,
-    //     formValue: { ...payload, _id: undefined },
-    //     _id: payload._id
-    //   };
-    // }
+    getChildren(state, { payload }) {
+      return {
+        ...state,
+        children: [...payload]
+      };
+    }
   }
 };
 
