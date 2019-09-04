@@ -34,6 +34,7 @@
     }
   },
   "dependencies": {
+    "zookeeper":"4.4.0",
     "antd": "^3.22.2",
     "dva": "^2.4.1",
     "moment": "^2.24.0",

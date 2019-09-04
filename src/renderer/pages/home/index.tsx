@@ -44,7 +44,7 @@ function Home(props: HomeProps) {
   useEffect(() => {
     dispatch({
       type: "home/connect",
-      payload: { connectionString: "localhost:2181" }, //118.25.172.148:2181
+      payload: { connectionString: "118.25.172.148:2181" }, //118.25.172.148:2181
       callback() {
         dispatch({
           type: "home/getChildren",

@@ -1,7 +1,12 @@
 import { Client } from "node-zookeeper-client";
 import { MomentInput } from "moment";
-import { Buffer } from "buffer";
-var moment = require("moment");
+// import { Buffer } from "buffer";
+// import {  } from "zookeeper";
+
+const Buffer = window.require("buffer");
+// const ZooKeeper = window.require("zookeeper");
+console.log(Buffer)
+const moment = require("moment");
 
 let nodeZookeeperClient = window.require("node-zookeeper-client");
 
@@ -9,6 +14,15 @@ class ZkClient {
   client?: Client;
 
   async connect(connectionString: string) {
+    // let client = new ZooKeeper({
+    //   connect: connectionString
+    // });
+    // console.log(client);
+    // client.connect({}, (e, client) => {
+    //   client.get_children("/").then(a => {
+    //     console.log(a);
+    //   });
+    // });
     const promise = new Promise<Client>((resolve, reject) => {
       let client = nodeZookeeperClient.createClient(connectionString) as Client;
       client.once("connected", () => {
@@ -125,9 +139,9 @@ class ZkClient {
       // let buffer = Buffer.from(Buffer.from(data) as Uint8Array);
       let buffer2 = new Buffer(data);
       console.log(buffer2);
-      let buffer = Buffer.from(data,"utf8");
+      let buffer = Buffer.from(data);
       // console.log(path);
-      let buffer1 = Buffer.alloc(buffer.length,buffer);
+      let buffer1 = Buffer.alloc(buffer.length, buffer);
       console.log(buffer1);
       console.log(Buffer.isBuffer(buffer));
       console.log(buffer);
