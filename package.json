@@ -28,17 +28,20 @@
       "output": "release"
     },
     "appId": "com.ghostg00.visual-zk",
-    "asar": false
+    "asar": false,
+    "win": {
+      "icon": "favicon.ico"
+    }
   },
   "dependencies": {
-    "@types/moment": "^2.13.0",
     "antd": "^3.22.2",
     "dva": "^2.4.1",
     "moment": "^2.24.0",
     "nedb": "^1.8.0",
     "node-zookeeper-client": "^1.0.0",
     "react": "^16.9.0",
-    "react-dom": "^16.9.0"
+    "react-dom": "^16.9.0",
+    "react-split-pane": "^0.1.87"
   },
   "devDependencies": {
     "@types/jest": "^23.3.12",
@@ -47,6 +50,8 @@
     "@types/react": "^16.7.18",
     "@types/react-dom": "^16.0.11",
     "@types/react-test-renderer": "^16.0.3",
+    "@types/moment": "^2.13.0",
+    "awesome-typescript-loader": "^5.2.1",
     "babel-eslint": "^10.0.3",
     "concurrently": "^4.1.2",
     "cross-env": "^5.2.1",

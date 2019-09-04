@@ -1,13 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { connect } from "dva";
-import { Card, Col, Form, Input, Row, Switch, Table, Tabs, Tree } from "antd";
-import { FormComponentProps } from "antd/lib/form";
+import {
+  Button,
+  Card,
+  Col,
+  Descriptions,
+  Input,
+  message,
+  Row,
+  Select,
+  Switch,
+  Table,
+  Tabs,
+  Tree
+} from "antd";
 import { AnyAction, Dispatch } from "redux";
 import { StateType } from "@/pages/home/model";
-import { AntTreeNode } from "antd/lib/tree";
 import { TreeProps } from "antd/es/tree";
 import { TreeNodeNormal } from "antd/es/tree/Tree";
-import { CardTabListType } from "antd/lib/card";
+import style from "./style.less";
+import SplitPane from "react-split-pane";
+import { ZkACL } from "@/utils/zk-client";
 
 interface HomeProps {
   home: StateType;
@@ -16,20 +29,25 @@ interface HomeProps {
 }
 
 const { TreeNode, DirectoryTree } = Tree;
-const { Search } = Input;
+const { Search, TextArea } = Input;
 const { TabPane } = Tabs;
+const { Option } = Select;
 
 function Home(props: HomeProps) {
   const { dispatch, home } = props;
   const [treeData, setTreeData] = useState<TreeNodeNormal[]>([]);
+  const [nodePath, setNodePath] = useState<string>("");
   const [nodeName, setNodeName] = useState<string>("");
+  const [nodeData, setNodeData] = useState<string>("");
+  const [nodeACL, setNodeACL] = useState<ZkACL>(new ZkACL("", "", ""));
 
   useEffect(() => {
     dispatch({
-      type: "home/fetchConnect",
+      type: "home/connect",
+      payload: { connectionString: "localhost:2181" }, //118.25.172.148:2181
       callback() {
         dispatch({
-          type: "home/fetchGetChildren",
+          type: "home/getChildren",
           payload: { path: "/" },
           callback(data: string[]) {
             let treeData: TreeNodeNormal[] = data.map(item => {
@@ -50,7 +68,7 @@ function Home(props: HomeProps) {
         return;
       }
       dispatch({
-        type: "home/fetchGetChildren",
+        type: "home/getChildren",
         payload: { path },
         callback(data: string[]) {
           node.props.dataRef.children = data.map(item => {
@@ -79,13 +97,31 @@ function Home(props: HomeProps) {
 
   const onClickTree: TreeProps["onClick"] = (e, node) => {
     setNodeName(node.props.title as string);
+    const path = node.props.eventKey as string;
+    setNodePath(path);
     dispatch({
-      type: "home/fetchGetData",
-      payload: { path: node.props.eventKey }
+      type: "home/getData",
+      payload: { path },
+      callback(nodeData: string) {
+        setNodeData(nodeData);
+      }
     });
     dispatch({
-      type: "home/fetchGetACL",
-      payload: { path: node.props.eventKey }
+      type: "home/getACL",
+      payload: { path },
+      callback(nodeACL: ZkACL) {
+        setNodeACL(nodeACL);
+      }
+    });
+  };
+
+  const onSetData = () => {
+    dispatch({
+      type: "home/setData",
+      payload: { path: nodePath, data: nodeData },
+      callback() {
+        message.success(`${nodePath}节点值更新成功`);
+      }
     });
   };
 
@@ -112,46 +148,69 @@ function Home(props: HomeProps) {
     }
   ];
 
+  const leftDiv = (
+    <div>
+      <Card style={{ overflow: "auto", height: "98.5vh", margin: 5 }} hoverable>
+        <Search
+          placeholder="请输入节点"
+          onSearch={value => console.log(value)}
+        />
+        <DirectoryTree loadData={onLoadData} onClick={onClickTree}>
+          {renderTreeNodes(treeData)}
+        </DirectoryTree>
+      </Card>
+    </div>
+  );
+
   return (
     <>
-      <Row>
-        <Col span={8}>
-          <Card
-            style={{ overflow: "auto", minHeight: "100%", margin: 5 }}
-            hoverable
-          >
-            <Search
-              placeholder="请输入节点"
-              onSearch={value => console.log(value)}
-              style={{ width: 200 }}
-            />
-            <DirectoryTree loadData={onLoadData} onClick={onClickTree}>
-              {renderTreeNodes(treeData)}
-            </DirectoryTree>
-          </Card>
-        </Col>
-        <Col span={16}>
-          <Card>
-            <Tabs style={{ height: 800 }}>
+      <SplitPane
+        split={"vertical"}
+        minSize={300}
+        defaultSize={parseInt(localStorage.getItem("splitPos") as string)}
+        onChange={size => localStorage.setItem("splitPos", size.toString())}
+      >
+        {leftDiv}
+        <div>
+          <Card style={{ height: "68vh", margin: 5 }} hoverable>
+            <Tabs>
               <TabPane tab="节点名" key="1">
-                {nodeName}
+                <Card className={style.tabsCard}>{nodeName}</Card>
                 <Row align={"middle"} justify={"center"}>
                   <Col>
-                    URL解码:
-                    <Switch
-                      onChange={(checked: boolean, event: MouseEvent) => {
-                        if (checked) {
-                          setNodeName(decodeURIComponent(nodeName));
-                        } else {
-                          setNodeName(encodeURIComponent(nodeName));
-                        }
-                      }}
-                    />
+                    <div style={{ margin: 5, height: "10vh" }}>
+                      URL解码：
+                      <Switch
+                        onChange={(checked: boolean) => {
+                          if (checked) {
+                            setNodeName(decodeURIComponent(nodeName));
+                          } else {
+                            setNodeName(encodeURIComponent(nodeName));
+                          }
+                        }}
+                      />
+                    </div>
                   </Col>
                 </Row>
               </TabPane>
               <TabPane tab="节点值" key="2">
-                {home.nodeData}
+                <Card className={style.tabsCard}>
+                  <TextArea
+                    rows={4}
+                    value={nodeData}
+                    autosize={{ minRows: 18, maxRows: 18 }}
+                    onChange={event => setNodeData(event.target.value)}
+                  />
+                </Card>
+                <Row align={"middle"} justify={"center"}>
+                  <Col>
+                    <div style={{ margin: 5, height: "10vh" }}>
+                      <Button type="primary" onClick={onSetData}>
+                        保存
+                      </Button>
+                    </div>
+                  </Col>
+                </Row>
               </TabPane>
               <TabPane tab="节点属性" key="3">
                 <Table
@@ -160,15 +219,48 @@ function Home(props: HomeProps) {
                   rowKey={"name"}
                   size={"small"}
                   pagination={false}
+                  scroll={{ y: "47vh" }}
                 />
               </TabPane>
               <TabPane tab="节点权限" key="4">
-                {/*{home.nodeACl}*/}
+                <Card className={style.tabsCard}>
+                  <Descriptions
+                    bordered
+                    size={"small"}
+                    layout={"horizontal"}
+                    column={1}
+                  >
+                    <Descriptions.Item label="Schema(权限模式)" span={2}>
+                      {nodeACL.scheme}
+                      {/*<Select*/}
+                      {/*  defaultValue="lucy"*/}
+                      {/*  style={{ width: 200 }}*/}
+                      {/*  onChange={(value: string) => {*/}
+                      {/*    nodeAcl.id.scheme = value;*/}
+                      {/*    setNodeAcl(nodeAcl);*/}
+                      {/*  }}*/}
+                      {/*  value={nodeAcl.id.scheme}*/}
+                      {/*>*/}
+                      {/*  <Option value="world">world</Option>*/}
+                      {/*  <Option value="auth">auth</Option>*/}
+                      {/*  <Option value="digest">digest</Option>*/}
+                      {/*  <Option value="ip">ip</Option>*/}
+                      {/*</Select>*/}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="ID(授权对象)">
+                      {nodeACL.id}
+                    </Descriptions.Item>
+                    <Descriptions.Item label="Permission(权限)" span={2}>
+                      {nodeACL.permissions}
+                    </Descriptions.Item>
+                  </Descriptions>
+                </Card>
               </TabPane>
             </Tabs>
           </Card>
-        </Col>
-      </Row>
+          <Card style={{ height: "30vh", margin: 5 }}>功能待定</Card>
+        </div>
+      </SplitPane>
     </>
   );
 }

@@ -5,49 +5,50 @@ import ZkClient from "@/utils/zk-client";
 let zkClient = new ZkClient();
 
 export interface StateType {
-  // treeData: [];
-  nodeData: string;
   nodeStat: [];
-  nodeACl: [];
 }
 
 const model: ModelType<StateType> = {
   namespace: "home",
-  state: { nodeData: "", nodeACl: [], nodeStat: [] },
+  state: { nodeStat: [] },
 
   effects: {
-    *fetchConnect({ payload, callback }, { call, put }) {
-      const data = yield call([zkClient, zkClient.connect], "localhost:2181");
+    *connect({ payload, callback }, { call, put }) {
+      const data = yield call(
+        [zkClient, zkClient.connect],
+        payload.connectionString || "localhost:2181"
+      );
       callback && callback(data);
     },
-    *fetchGetChildren({ payload, callback }, { call, put }) {
+    *getChildren({ payload, callback }, { call, put }) {
       const data = yield call([zkClient, zkClient.getChildren], payload.path);
       callback && callback(data);
     },
-    *fetchGetData({ payload, callback }, { call, put }) {
+    *getData({ payload, callback }, { call, put }) {
       const data = yield call([zkClient, zkClient.getData], payload.path);
-      console.log(data);
+      yield put({
+        type: "getDataReducer",
+        payload: data
+      });
+      callback && callback(data[0]);
+    },
+    *setData({ payload, callback }, { call, put }) {
+      yield call([zkClient, zkClient.setData], payload.path, payload.data);
       yield put({
         type: "getData",
-        payload: data
+        payload
       });
+      callback && callback();
     },
-    *fetchGetACL({ payload, callback }, { call, put }) {
+    *getACL({ payload, callback }, { call, put }) {
       const data = yield call([zkClient, zkClient.getACL], payload.path);
-      yield put({
-        type: "getACL",
-        payload: data
-      });
+      callback && callback(data);
     }
   },
   // @ts-ignore
   reducers: {
-    getData(state, { payload }) {
-      console.log(payload[1]);
-      return { ...state, nodeData: payload[0], nodeStat: payload[1] };
-    },
-    getACL(state, { payload }) {
-      return { ...state, nodeACl: payload };
+    getDataReducer(state, { payload }) {
+      return { ...state, nodeStat: payload[1] };
     }
   }
 };

@@ -1,6 +1,6 @@
 import { Client } from "node-zookeeper-client";
 import { MomentInput } from "moment";
-// import { moment } from "moment";
+import { Buffer } from "buffer";
 var moment = require("moment");
 
 let nodeZookeeperClient = window.require("node-zookeeper-client");
@@ -38,7 +38,7 @@ class ZkClient {
   async getData(path: string) {
     return new Promise((resolve, reject) => {
       (this.client as Client).getData(path, (error, data, stat) => {
-        console.log(stat);
+        console.log(data);
         const statData = [
           {
             name: "cZxid",
@@ -115,7 +115,31 @@ class ZkClient {
             realValue: stat.numChildren
           }
         ];
-        resolve([data.toLocaleString(), statData]);
+        resolve([data && data.toLocaleString(), statData]);
+      });
+    });
+  }
+
+  async setData(path: string, data: string) {
+    return new Promise((resolve, reject) => {
+      // let buffer = Buffer.from(Buffer.from(data) as Uint8Array);
+      let buffer2 = new Buffer(data);
+      console.log(buffer2);
+      let buffer = Buffer.from(data,"utf8");
+      // console.log(path);
+      let buffer1 = Buffer.alloc(buffer.length,buffer);
+      console.log(buffer1);
+      console.log(Buffer.isBuffer(buffer));
+      console.log(buffer);
+      // if (buffer == null ) {
+      //   console.log(true);
+      // }
+      // assert(
+      //   buffer === null || buffer === undefined|| Buffer.isBuffer(buffer),
+      //   "data must be a valid buffer, null or undefined.1111"
+      // );
+      (this.client as Client).setData(path, buffer, -1, (error, stat) => {
+        resolve();
       });
     });
   }
@@ -136,11 +160,23 @@ class ZkClient {
   async getACL(path: string) {
     return new Promise((resolve, reject) => {
       (this.client as Client).getACL(path, (error, acls, stat) => {
-        // console.log(acls[0].perms);
-        // console.log((acls[0] as any));
-        resolve(acls);
+        let acl = acls[0] as any;
+        let zkACL = new ZkACL(acl.id.scheme, acl.id.id, acl.permission);
+        resolve(zkACL);
       });
     });
+  }
+}
+
+export class ZkACL {
+  scheme: string;
+  id: string;
+  permissions: string;
+
+  constructor(scheme: string, id: string, permissions: string) {
+    this.scheme = scheme;
+    this.id = id;
+    this.permissions = permissions;
   }
 }
 
