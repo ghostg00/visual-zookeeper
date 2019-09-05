@@ -5,22 +5,37 @@ import {
   Card,
   Col,
   Descriptions,
+  Divider,
+  Icon,
   Input,
   message,
+  Modal,
   Row,
   Select,
   Switch,
   Table,
   Tabs,
+  Tooltip,
   Tree
 } from "antd";
 import { AnyAction, Dispatch } from "redux";
 import { StateType } from "@/pages/home/model";
 import { TreeProps } from "antd/es/tree";
 import { TreeNodeNormal } from "antd/es/tree/Tree";
-import style from "./style.less";
+import { SearchProps } from "antd/es/input";
 import SplitPane from "react-split-pane";
-import { ZkACL } from "@/utils/zk-client";
+import { ZkACL } from "@/utils/ZkClient";
+import logEvent from "./LogEvent";
+import { Event } from "node-zookeeper-client";
+
+import style from "./style.less";
+import { AddNodeModal } from "@/pages/home/data.d";
+
+const { TreeNode, DirectoryTree } = Tree;
+const { Search, TextArea } = Input;
+const { TabPane } = Tabs;
+const { Option } = Select;
+const ButtonGroup = Button.Group;
 
 interface HomeProps {
   home: StateType;
@@ -28,23 +43,25 @@ interface HomeProps {
   loading: boolean;
 }
 
-const { TreeNode, DirectoryTree } = Tree;
-const { Search, TextArea } = Input;
-const { TabPane } = Tabs;
-const { Option } = Select;
-
 function Home(props: HomeProps) {
   const { dispatch, home } = props;
   const [treeData, setTreeData] = useState<TreeNodeNormal[]>([]);
-  const [nodePath, setNodePath] = useState<string>("");
-  const [nodeName, setNodeName] = useState<string>("");
-  const [nodeData, setNodeData] = useState<string>("");
+  const [nodePath, setNodePath] = useState("");
+  const [nodeName, setNodeName] = useState("");
+  const [nodeData, setNodeData] = useState("");
   const [nodeACL, setNodeACL] = useState<ZkACL>(new ZkACL("", "", ""));
+  const [addNodeModal, setAddNodeModal] = useState<AddNodeModal>({
+    visible: false,
+    parentNode: "/",
+    nodeName: "",
+    path: "",
+    nodeData: null
+  });
 
-  useEffect(() => {
+  const connect: SearchProps["onSearch"] = value => {
     dispatch({
       type: "home/connect",
-      payload: { connectionString: "118.25.172.148:2181" }, //118.25.172.148:2181
+      payload: { connectionString: value }, //118.25.172.148:2181
       callback() {
         dispatch({
           type: "home/getChildren",
@@ -58,7 +75,7 @@ function Home(props: HomeProps) {
         });
       }
     });
-  }, []);
+  };
 
   const onLoadData: TreeProps["loadData"] = node =>
     new Promise(resolve => {
@@ -125,6 +142,41 @@ function Home(props: HomeProps) {
     });
   };
 
+  const onAdd = () => {
+    setAddNodeModal({ ...addNodeModal, visible: true });
+  };
+
+  const onCreate = () => {
+    dispatch({
+      type: "home/create",
+      payload: addNodeModal,
+      callback() {
+        message.success(`${addNodeModal.nodeName}节点新增成功`);
+      }
+    });
+  };
+
+  const onRemove = () => {
+    if (nodePath) {
+      Modal.confirm({
+        title: "警告",
+        content: "您确定要删除此节点以及子节点吗？",
+        onOk: () => {
+          return new Promise(resolve => {
+            dispatch({
+              type: "home/remove",
+              payload: { path: nodePath },
+              callback() {
+                message.success(`${nodePath}节点值删除成功`);
+                resolve();
+              }
+            });
+          });
+        }
+      });
+    }
+  };
+
   const columns = [
     {
       title: "名称",
@@ -148,13 +200,39 @@ function Home(props: HomeProps) {
     }
   ];
 
+  logEvent.on("log", (event: Event) => {
+    console.log("log", event);
+  });
+
   const leftDiv = (
     <div>
       <Card style={{ overflow: "auto", height: "98.5vh", margin: 5 }} hoverable>
         <Search
-          placeholder="请输入节点"
-          onSearch={value => console.log(value)}
+          addonBefore="url"
+          placeholder="请输入zookeeper url"
+          enterButton="连接"
+          onSearch={connect}
+          defaultValue={"127.0.0.1:2181"}
         />
+        <Divider>zookeeper节点</Divider>
+        <Row>
+          <Col span={18}>
+            <Search
+              placeholder="请输入节点"
+              onSearch={value => console.log(value)}
+            />
+          </Col>
+          <Col span={5} push={1}>
+            <ButtonGroup>
+              <Tooltip title="新增节点">
+                <Button icon={"plus-circle"} onClick={onAdd} />
+              </Tooltip>
+              <Tooltip title="删除节点">
+                <Button icon={"delete"} onClick={onRemove} />
+              </Tooltip>
+            </ButtonGroup>
+          </Col>
+        </Row>
         <DirectoryTree loadData={onLoadData} onClick={onClickTree}>
           {renderTreeNodes(treeData)}
         </DirectoryTree>
@@ -166,7 +244,7 @@ function Home(props: HomeProps) {
     <>
       <SplitPane
         split={"vertical"}
-        minSize={300}
+        minSize={400}
         defaultSize={parseInt(localStorage.getItem("splitPos") as string)}
         onChange={size => localStorage.setItem("splitPos", size.toString())}
       >
@@ -232,20 +310,6 @@ function Home(props: HomeProps) {
                   >
                     <Descriptions.Item label="Schema(权限模式)" span={2}>
                       {nodeACL.scheme}
-                      {/*<Select*/}
-                      {/*  defaultValue="lucy"*/}
-                      {/*  style={{ width: 200 }}*/}
-                      {/*  onChange={(value: string) => {*/}
-                      {/*    nodeAcl.id.scheme = value;*/}
-                      {/*    setNodeAcl(nodeAcl);*/}
-                      {/*  }}*/}
-                      {/*  value={nodeAcl.id.scheme}*/}
-                      {/*>*/}
-                      {/*  <Option value="world">world</Option>*/}
-                      {/*  <Option value="auth">auth</Option>*/}
-                      {/*  <Option value="digest">digest</Option>*/}
-                      {/*  <Option value="ip">ip</Option>*/}
-                      {/*</Select>*/}
                     </Descriptions.Item>
                     <Descriptions.Item label="ID(授权对象)">
                       {nodeACL.id}
@@ -258,9 +322,20 @@ function Home(props: HomeProps) {
               </TabPane>
             </Tabs>
           </Card>
-          <Card style={{ height: "30vh", margin: 5 }}>功能待定</Card>
+          <Card style={{ height: "30vh", margin: 5 }} hoverable>
+            <div>{"日志"}</div>
+          </Card>
         </div>
       </SplitPane>
+      <Modal
+        title={"添加节点"}
+        visible={addNodeModal.visible}
+        destroyOnClose={true}
+        onCancel={() => setAddNodeModal({ ...addNodeModal, visible: false })}
+        onOk={onCreate}
+      >
+        asdasd
+      </Modal>
     </>
   );
 }

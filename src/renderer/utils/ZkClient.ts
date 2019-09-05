@@ -1,28 +1,15 @@
-import { Client } from "node-zookeeper-client";
+import { Client, Event } from "node-zookeeper-client";
 import { MomentInput } from "moment";
-// import { Buffer } from "buffer";
-// import {  } from "zookeeper";
 
-const Buffer = window.require("buffer");
-// const ZooKeeper = window.require("zookeeper");
-console.log(Buffer)
 const moment = require("moment");
 
+const { Buffer } = window.require("buffer");
 let nodeZookeeperClient = window.require("node-zookeeper-client");
 
 class ZkClient {
   client?: Client;
 
   async connect(connectionString: string) {
-    // let client = new ZooKeeper({
-    //   connect: connectionString
-    // });
-    // console.log(client);
-    // client.connect({}, (e, client) => {
-    //   client.get_children("/").then(a => {
-    //     console.log(a);
-    //   });
-    // });
     const promise = new Promise<Client>((resolve, reject) => {
       let client = nodeZookeeperClient.createClient(connectionString) as Client;
       client.once("connected", () => {
@@ -33,11 +20,15 @@ class ZkClient {
     this.client = await promise;
   }
 
-  async getChildren(path: string) {
+  async getChildren(path: string, watcher: (event: Event) => void) {
     return new Promise((resolve, reject) => {
-      (this.client as Client).getChildren(path, (error, children, stat) => {
-        resolve(children);
-      });
+      (this.client as Client).getChildren(
+        path,
+        watcher,
+        (error, children, stat) => {
+          resolve(children);
+        }
+      );
     });
   }
 
@@ -49,44 +40,52 @@ class ZkClient {
     });
   }
 
-  async getData(path: string) {
+  async create(path: string, data: string) {
     return new Promise((resolve, reject) => {
-      (this.client as Client).getData(path, (error, data, stat) => {
-        console.log(data);
+      let buffer = Buffer.from(data);
+      (this.client as Client).create(path, buffer, (error, path) => {
+        resolve();
+      });
+    });
+  }
+
+  async getData(path: string, watcher: (event: Event) => void) {
+    return new Promise((resolve, reject) => {
+      (this.client as Client).getData(path, watcher, (error, data, stat) => {
         const statData = [
           {
             name: "cZxid",
             description: "这个值是当前会话事物创建产生ID",
-            value: this.int64(stat.czxid),
-            realValue: `0x${this.hexString(stat.czxid).replace(/0+/, "")}`
+            value: int64(stat.czxid),
+            realValue: `0x${hexString(stat.czxid).replace(/0+/, "")}`
           },
           {
             name: "ctime",
             description: "创建时间",
-            value: this.format(this.int64(stat.ctime)),
-            realValue: `${new Date(
-              this.int64(stat.ctime)
-            ).toString()}(${this.int64(stat.ctime)})`
+            value: format(int64(stat.ctime)),
+            realValue: `${new Date(int64(stat.ctime)).toString()}(${int64(
+              stat.ctime
+            )})`
           },
           {
             name: "mZxid",
             description: "最近更新节点的事物ID",
-            value: this.int64(stat.mzxid),
-            realValue: `0x${this.hexString(stat.mzxid).replace(/0+/, "")}`
+            value: int64(stat.mzxid),
+            realValue: `0x${hexString(stat.mzxid).replace(/0+/, "")}`
           },
           {
             name: "mtime",
             description: "最近修改时间",
-            value: this.format(this.int64(stat.mtime)),
-            realValue: `${new Date(
-              this.int64(stat.mtime)
-            ).toString()}(${this.int64(stat.mtime)})`
+            value: format(int64(stat.mtime)),
+            realValue: `${new Date(int64(stat.mtime)).toString()}(${int64(
+              stat.mtime
+            )})`
           },
           {
             name: "pZxid",
             description: "该节点的子节点最后修改的事物ID",
-            value: this.int64(stat.pzxid),
-            realValue: `0x${this.hexString(stat.pzxid).replace(/0+/, "")}`
+            value: int64(stat.pzxid),
+            realValue: `0x${hexString(stat.pzxid).replace(/0+/, "")}`
           },
           {
             name: "cversion",
@@ -109,10 +108,10 @@ class ZkClient {
           {
             name: "ephemeralOwner",
             description: "创建此临时节点的会话ID",
-            value: this.int64(stat.ephemeralOwner),
+            value: int64(stat.ephemeralOwner),
             realValue: `0x${
-              this.int64(stat.ephemeralOwner) != 0
-                ? this.hexString(stat.ephemeralOwner).replace(/0+/, "")
+              int64(stat.ephemeralOwner) != 0
+                ? hexString(stat.ephemeralOwner).replace(/0+/, "")
                 : 0
             }`
           },
@@ -136,39 +135,11 @@ class ZkClient {
 
   async setData(path: string, data: string) {
     return new Promise((resolve, reject) => {
-      // let buffer = Buffer.from(Buffer.from(data) as Uint8Array);
-      let buffer2 = new Buffer(data);
-      console.log(buffer2);
       let buffer = Buffer.from(data);
-      // console.log(path);
-      let buffer1 = Buffer.alloc(buffer.length, buffer);
-      console.log(buffer1);
-      console.log(Buffer.isBuffer(buffer));
-      console.log(buffer);
-      // if (buffer == null ) {
-      //   console.log(true);
-      // }
-      // assert(
-      //   buffer === null || buffer === undefined|| Buffer.isBuffer(buffer),
-      //   "data must be a valid buffer, null or undefined.1111"
-      // );
       (this.client as Client).setData(path, buffer, -1, (error, stat) => {
         resolve();
       });
     });
-  }
-
-  hexString(longBuffer: any) {
-    return (longBuffer as Buffer).toString("hex");
-  }
-
-  int64(longBuffer: any) {
-    const hexString = (longBuffer as Buffer).toString("hex");
-    return parseInt(hexString, 16);
-  }
-
-  format(inp: MomentInput) {
-    return moment(inp).format("YYYY-MM-DD HH:mm:ss");
   }
 
   async getACL(path: string) {
@@ -181,6 +152,19 @@ class ZkClient {
     });
   }
 }
+
+const hexString = (longBuffer: any) => {
+  return (longBuffer as Buffer).toString("hex");
+};
+
+const int64 = (longBuffer: any) => {
+  const hexString = (longBuffer as Buffer).toString("hex");
+  return parseInt(hexString, 16);
+};
+
+const format = (inp: MomentInput) => {
+  return moment(inp).format("YYYY-MM-DD HH:mm:ss");
+};
 
 export class ZkACL {
   scheme: string;

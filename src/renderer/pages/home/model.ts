@@ -1,6 +1,7 @@
-import { ZKServer } from "@/pages/home/data.d";
 import { ModelType } from "@/declare/dva";
-import ZkClient from "@/utils/zk-client";
+import ZkClient from "@/utils/ZkClient";
+import { Event } from "node-zookeeper-client";
+import logEvent from "./LogEvent";
 
 let zkClient = new ZkClient();
 
@@ -21,11 +22,35 @@ const model: ModelType<StateType> = {
       callback && callback(data);
     },
     *getChildren({ payload, callback }, { call, put }) {
-      const data = yield call([zkClient, zkClient.getChildren], payload.path);
+      const data = yield call(
+        [zkClient, zkClient.getChildren],
+        payload.path,
+        (event: Event) => {
+          logEvent.emit("log", event);
+        }
+      );
+      callback && callback(data);
+    },
+    *create({ payload, callback }, { call, put }) {
+      const data = yield call(
+        [zkClient, zkClient.create],
+        payload.path,
+        payload.nodeData
+      );
+      callback && callback(data);
+    },
+    *remove({ payload, callback }, { call, put }) {
+      const data = yield call([zkClient, zkClient.remove], payload.path);
       callback && callback(data);
     },
     *getData({ payload, callback }, { call, put }) {
-      const data = yield call([zkClient, zkClient.getData], payload.path);
+      const data = yield call(
+        [zkClient, zkClient.getData],
+        payload.path,
+        (event: Event) => {
+          logEvent.emit("log", event);
+        }
+      );
       yield put({
         type: "getDataReducer",
         payload: data
