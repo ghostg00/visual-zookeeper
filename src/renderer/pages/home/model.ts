@@ -19,13 +19,14 @@ const model: ModelType<StateType> = {
         [zkClient, zkClient.connect],
         payload.connectionString || "localhost:2181"
       );
-      callback && callback(data);
+      data && callback && callback(data);
     },
     *getChildren({ payload, callback }, { call, put }) {
       const data = yield call(
         [zkClient, zkClient.getChildren],
         payload.path,
         (event: Event) => {
+          console.log("emitlog");
           logEvent.emit("log", event);
         }
       );
@@ -48,7 +49,7 @@ const model: ModelType<StateType> = {
         [zkClient, zkClient.getData],
         payload.path,
         (event: Event) => {
-          logEvent.emit("log", event);
+          // logEvent.emit("log", event);
         }
       );
       yield put({

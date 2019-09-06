@@ -1,7 +1,6 @@
-import { EventEmitter } from "events";
+let events = window.require("events");
 
-class LogEvent extends EventEmitter {}
+let eventEmitter = new events.EventEmitter();
+eventEmitter.setMaxListeners(1);
 
-const logEvent = new LogEvent();
-
-export default logEvent;
+export default eventEmitter;

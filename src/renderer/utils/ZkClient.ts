@@ -10,7 +10,8 @@ class ZkClient {
   client?: Client;
 
   async connect(connectionString: string) {
-    const promise = new Promise<Client>((resolve, reject) => {
+    if (this.client) return;
+    const promise = new Promise<Client>(resolve => {
       let client = nodeZookeeperClient.createClient(connectionString) as Client;
       client.once("connected", () => {
         resolve(client);
@@ -18,39 +19,46 @@ class ZkClient {
       client.connect();
     });
     this.client = await promise;
+    return true;
+  }
+
+  async close() {
+    return new Promise(resolve => {
+      (this.client as Client).close();
+      resolve();
+    });
   }
 
   async getChildren(path: string, watcher: (event: Event) => void) {
-    return new Promise((resolve, reject) => {
-      (this.client as Client).getChildren(
-        path,
-        watcher,
-        (error, children, stat) => {
-          resolve(children);
-        }
-      );
+    return new Promise(resolve => {
+      (this.client as Client).getChildren(path, watcher, (error, children) => {
+        resolve(children);
+      });
     });
   }
 
   async remove(path: string) {
-    return new Promise((resolve, reject) => {
-      (this.client as Client).remove(path, error => {
+    return new Promise(resolve => {
+      (this.client as Client).remove(path, () => {
         resolve();
       });
     });
   }
 
   async create(path: string, data: string) {
-    return new Promise((resolve, reject) => {
-      let buffer = Buffer.from(data);
-      (this.client as Client).create(path, buffer, (error, path) => {
-        resolve();
-      });
+    return new Promise(resolve => {
+      let client = this.client as Client;
+      if (data) {
+        let buffer = Buffer.from(data);
+        client.create(path, buffer, () => resolve());
+      } else {
+        client.create(path, () => resolve());
+      }
     });
   }
 
   async getData(path: string, watcher: (event: Event) => void) {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       (this.client as Client).getData(path, watcher, (error, data, stat) => {
         const statData = [
           {
@@ -134,17 +142,17 @@ class ZkClient {
   }
 
   async setData(path: string, data: string) {
-    return new Promise((resolve, reject) => {
+    return new Promise(resolve => {
       let buffer = Buffer.from(data);
-      (this.client as Client).setData(path, buffer, -1, (error, stat) => {
+      (this.client as Client).setData(path, buffer, -1, () => {
         resolve();
       });
     });
   }
 
   async getACL(path: string) {
-    return new Promise((resolve, reject) => {
-      (this.client as Client).getACL(path, (error, acls, stat) => {
+    return new Promise(resolve => {
+      (this.client as Client).getACL(path, (error, acls) => {
         let acl = acls[0] as any;
         let zkACL = new ZkACL(acl.id.scheme, acl.id.id, acl.permission);
         resolve(zkACL);

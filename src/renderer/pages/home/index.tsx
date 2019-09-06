@@ -6,12 +6,11 @@ import {
   Col,
   Descriptions,
   Divider,
-  Icon,
+  Form,
   Input,
   message,
   Modal,
   Row,
-  Select,
   Switch,
   Table,
   Tabs,
@@ -29,19 +28,58 @@ import logEvent from "./LogEvent";
 import { Event } from "node-zookeeper-client";
 
 import style from "./style.less";
-import { AddNodeModal } from "@/pages/home/data.d";
+import { FormComponentProps } from "antd/es/form";
+import { ModalProps } from "antd/es/modal";
+
+const moment = require("moment");
 
 const { TreeNode, DirectoryTree } = Tree;
 const { Search, TextArea } = Input;
 const { TabPane } = Tabs;
-const { Option } = Select;
 const ButtonGroup = Button.Group;
 
 interface HomeProps {
   home: StateType;
   dispatch: Dispatch<AnyAction>;
-  loading: boolean;
 }
+
+interface CreateNodeFormProps extends FormComponentProps {
+  visible: boolean;
+  parentNode: string;
+  onCancel: ModalProps["onCancel"];
+  onCreate: ModalProps["onOk"];
+}
+
+const CreateNodeForm = Form.create<CreateNodeFormProps>({ name: "from" })(
+  class extends React.Component<CreateNodeFormProps> {
+    render() {
+      const { visible, parentNode, onCancel, onCreate, form } = this.props;
+      const { getFieldDecorator } = form;
+      return (
+        <Modal
+          title={"添加节点"}
+          visible={visible}
+          onCancel={onCancel}
+          onOk={onCreate}
+        >
+          <Form>
+            <Form.Item label="父节点">{parentNode}</Form.Item>
+            <Form.Item label="节点名">
+              {getFieldDecorator("nodeName", {
+                rules: [{ required: true, message: "请输入节点名称" }]
+              })(<Input placeholder={"请输入节点名称"} />)}
+            </Form.Item>
+            <Form.Item label="节点值">
+              {getFieldDecorator("nodeData")(
+                <TextArea placeholder={"请输入节点值"} />
+              )}
+            </Form.Item>
+          </Form>
+        </Modal>
+      );
+    }
+  }
+);
 
 function Home(props: HomeProps) {
   const { dispatch, home } = props;
@@ -49,14 +87,23 @@ function Home(props: HomeProps) {
   const [nodePath, setNodePath] = useState("");
   const [nodeName, setNodeName] = useState("");
   const [nodeData, setNodeData] = useState("");
+  const [createNodeVisible, setCreateNodeVisible] = useState(false);
   const [nodeACL, setNodeACL] = useState<ZkACL>(new ZkACL("", "", ""));
-  const [addNodeModal, setAddNodeModal] = useState<AddNodeModal>({
-    visible: false,
-    parentNode: "/",
-    nodeName: "",
-    path: "",
-    nodeData: null
-  });
+  const [formRef, setFormRef] = useState<any>();
+  const [logArr, setLogArr] = useState<string[]>([]);
+  const [log, setLog] = useState("");
+
+  useEffect(() => {
+    logEvent.on("log", (event: Event) => {
+      console.log("log", event);
+      logArr.length == 3 && logArr.shift();
+      logArr.push(
+        `${moment().format("YYYY-MM-DD HH:mm:ss SSS")}: ${event.toString()}`
+      );
+      setLogArr(logArr);
+      setLog(logArr.join("\n"));
+    });
+  }, []);
 
   const connect: SearchProps["onSearch"] = value => {
     dispatch({
@@ -142,17 +189,23 @@ function Home(props: HomeProps) {
     });
   };
 
-  const onAdd = () => {
-    setAddNodeModal({ ...addNodeModal, visible: true });
-  };
-
   const onCreate = () => {
-    dispatch({
-      type: "home/create",
-      payload: addNodeModal,
-      callback() {
-        message.success(`${addNodeModal.nodeName}节点新增成功`);
-      }
+    const { form } = formRef.props;
+    form.validateFields((err: any, values: any) => {
+      if (err) return;
+      let path = `${nodePath}/${values.nodeName}`;
+      dispatch({
+        type: "home/create",
+        payload: {
+          path,
+          nodeData: values.nodeData
+        },
+        callback() {
+          message.success(`${path}节点新增成功`);
+        }
+      });
+      form.resetFields();
+      setCreateNodeVisible(false);
     });
   };
 
@@ -200,10 +253,6 @@ function Home(props: HomeProps) {
     }
   ];
 
-  logEvent.on("log", (event: Event) => {
-    console.log("log", event);
-  });
-
   const leftDiv = (
     <div>
       <Card style={{ overflow: "auto", height: "98.5vh", margin: 5 }} hoverable>
@@ -212,7 +261,7 @@ function Home(props: HomeProps) {
           placeholder="请输入zookeeper url"
           enterButton="连接"
           onSearch={connect}
-          defaultValue={"127.0.0.1:2181"}
+          defaultValue={"106.12.84.136:2181"}
         />
         <Divider>zookeeper节点</Divider>
         <Row>
@@ -225,7 +274,10 @@ function Home(props: HomeProps) {
           <Col span={5} push={1}>
             <ButtonGroup>
               <Tooltip title="新增节点">
-                <Button icon={"plus-circle"} onClick={onAdd} />
+                <Button
+                  icon={"plus-circle"}
+                  onClick={() => nodePath && setCreateNodeVisible(true)}
+                />
               </Tooltip>
               <Tooltip title="删除节点">
                 <Button icon={"delete"} onClick={onRemove} />
@@ -323,19 +375,17 @@ function Home(props: HomeProps) {
             </Tabs>
           </Card>
           <Card style={{ height: "30vh", margin: 5 }} hoverable>
-            <div>{"日志"}</div>
+            <div style={{ whiteSpace: "pre-wrap" }}>{log}</div>
           </Card>
         </div>
       </SplitPane>
-      <Modal
-        title={"添加节点"}
-        visible={addNodeModal.visible}
-        destroyOnClose={true}
-        onCancel={() => setAddNodeModal({ ...addNodeModal, visible: false })}
-        onOk={onCreate}
-      >
-        asdasd
-      </Modal>
+      <CreateNodeForm
+        wrappedComponentRef={(ref: any) => setFormRef(ref)}
+        visible={createNodeVisible}
+        parentNode={nodePath}
+        onCancel={() => setCreateNodeVisible(false)}
+        onCreate={onCreate}
+      />
     </>
   );
 }
