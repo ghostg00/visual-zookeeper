@@ -26,7 +26,6 @@ const model: ModelType<StateType> = {
         [zkClient, zkClient.getChildren],
         payload.path,
         (event: Event) => {
-          console.log("emitlog");
           logEvent.emit("log", event);
         }
       );
@@ -49,7 +48,7 @@ const model: ModelType<StateType> = {
         [zkClient, zkClient.getData],
         payload.path,
         (event: Event) => {
-          // logEvent.emit("log", event);
+          logEvent.emit("log", event);
         }
       );
       yield put({

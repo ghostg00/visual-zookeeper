@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { RefObject, useEffect, useRef, useState } from "react";
 import { connect } from "dva";
 import {
   Button,
@@ -7,6 +7,7 @@ import {
   Descriptions,
   Divider,
   Form,
+  Icon,
   Input,
   message,
   Modal,
@@ -92,16 +93,20 @@ function Home(props: HomeProps) {
   const [formRef, setFormRef] = useState<any>();
   const [logArr, setLogArr] = useState<string[]>([]);
   const [log, setLog] = useState("");
+  const logDiv = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     logEvent.on("log", (event: Event) => {
       console.log("log", event);
-      logArr.length == 3 && logArr.shift();
+      logArr.length == 20 && logArr.shift();
       logArr.push(
         `${moment().format("YYYY-MM-DD HH:mm:ss SSS")}: ${event.toString()}`
       );
       setLogArr(logArr);
       setLog(logArr.join("\n"));
+      if (logDiv.current != null) {
+        logDiv.current.scrollTop = logDiv.current.scrollHeight;
+      }
     });
   }, []);
 
@@ -255,7 +260,15 @@ function Home(props: HomeProps) {
 
   const leftDiv = (
     <div>
-      <Card style={{ overflow: "auto", height: "98.5vh", margin: 5 }} hoverable>
+      <Card
+        style={{
+          overflow: "auto",
+          height: "98.5vh",
+          margin: 5,
+          backgroundColor: "#F5F5F5"
+        }}
+        hoverable
+      >
         <Search
           addonBefore="url"
           placeholder="请输入zookeeper url"
@@ -302,80 +315,127 @@ function Home(props: HomeProps) {
       >
         {leftDiv}
         <div>
-          <Card style={{ height: "68vh", margin: 5 }} hoverable>
-            <Tabs>
-              <TabPane tab="节点名" key="1">
-                <Card className={style.tabsCard}>{nodeName}</Card>
-                <Row align={"middle"} justify={"center"}>
-                  <Col>
-                    <div style={{ margin: 5, height: "10vh" }}>
-                      URL解码：
-                      <Switch
-                        onChange={(checked: boolean) => {
-                          if (checked) {
-                            setNodeName(decodeURIComponent(nodeName));
-                          } else {
-                            setNodeName(encodeURIComponent(nodeName));
-                          }
+          <Card
+            style={{ height: "58vh", margin: 5, backgroundColor: "#F5F5F5" }}
+            hoverable
+          >
+            <div className="card-container">
+              <Tabs type="card">
+                <TabPane tab="节点名" key="1">
+                  <Card className={style.tabsCard} bordered={false}>
+                    {nodeName}
+                  </Card>
+                  <Divider style={{ margin: 0 }} />
+                  <Row align={"middle"} justify={"center"}>
+                    <Col>
+                      <div
+                        style={{
+                          margin: 5,
+                          height: "4vh"
                         }}
-                      />
-                    </div>
-                  </Col>
-                </Row>
-              </TabPane>
-              <TabPane tab="节点值" key="2">
-                <Card className={style.tabsCard}>
-                  <TextArea
-                    rows={4}
-                    value={nodeData}
-                    autosize={{ minRows: 18, maxRows: 18 }}
-                    onChange={event => setNodeData(event.target.value)}
-                  />
-                </Card>
-                <Row align={"middle"} justify={"center"}>
-                  <Col>
-                    <div style={{ margin: 5, height: "10vh" }}>
-                      <Button type="primary" onClick={onSetData}>
-                        保存
-                      </Button>
-                    </div>
-                  </Col>
-                </Row>
-              </TabPane>
-              <TabPane tab="节点属性" key="3">
-                <Table
-                  columns={columns}
-                  dataSource={home.nodeStat}
-                  rowKey={"name"}
-                  size={"small"}
-                  pagination={false}
-                  scroll={{ y: "47vh" }}
-                />
-              </TabPane>
-              <TabPane tab="节点权限" key="4">
-                <Card className={style.tabsCard}>
-                  <Descriptions
-                    bordered
+                      >
+                        URL解码：
+                        <Switch
+                          onChange={(checked: boolean) => {
+                            if (checked) {
+                              setNodeName(decodeURIComponent(nodeName));
+                            } else {
+                              setNodeName(encodeURIComponent(nodeName));
+                            }
+                          }}
+                        />
+                      </div>
+                    </Col>
+                  </Row>
+                </TabPane>
+                <TabPane tab="节点值" key="2">
+                  <Card className={style.tabsCard} bordered={false}>
+                    <TextArea
+                      rows={4}
+                      value={nodeData}
+                      autosize={{ minRows: 8, maxRows: 16 }}
+                      onChange={event => setNodeData(event.target.value)}
+                    />
+                  </Card>
+                  <Divider style={{ margin: 0 }} />
+                  <Row align={"middle"} justify={"center"}>
+                    <Col>
+                      <div style={{ margin: 5, height: "4vh" }}>
+                        <Button type="primary" onClick={onSetData}>
+                          保存
+                        </Button>
+                      </div>
+                    </Col>
+                  </Row>
+                </TabPane>
+                <TabPane tab="节点属性" key="3">
+                  <Table
+                    columns={columns}
+                    dataSource={home.nodeStat}
+                    rowKey={"name"}
                     size={"small"}
-                    layout={"horizontal"}
-                    column={1}
-                  >
-                    <Descriptions.Item label="Schema(权限模式)" span={2}>
-                      {nodeACL.scheme}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="ID(授权对象)">
-                      {nodeACL.id}
-                    </Descriptions.Item>
-                    <Descriptions.Item label="Permission(权限)" span={2}>
-                      {nodeACL.permissions}
-                    </Descriptions.Item>
-                  </Descriptions>
-                </Card>
-              </TabPane>
-            </Tabs>
+                    pagination={false}
+                    scroll={{ y: "42.5vh" }}
+                  />
+                </TabPane>
+                <TabPane tab="节点权限" key="4">
+                  <Card className={style.tabsCard} bordered={false}>
+                    <Descriptions
+                      bordered
+                      size={"small"}
+                      layout={"horizontal"}
+                      column={1}
+                    >
+                      <Descriptions.Item label="Schema(权限模式)" span={2}>
+                        {nodeACL.scheme}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="ID(授权对象)">
+                        {nodeACL.id}
+                      </Descriptions.Item>
+                      <Descriptions.Item label="Permission(权限)" span={2}>
+                        {nodeACL.permissions}
+                      </Descriptions.Item>
+                    </Descriptions>
+                  </Card>
+                </TabPane>
+              </Tabs>
+            </div>
           </Card>
-          <Card style={{ height: "30vh", margin: 5 }} hoverable>
-            <div style={{ whiteSpace: "pre-wrap" }}>{log}</div>
+          <Card
+            style={{
+              height: "40vh",
+              margin: 5,
+              backgroundColor: "#F5F5F5"
+            }}
+            hoverable
+          >
+            <Row>
+              <Col span={23}>
+                <div
+                  ref={logDiv}
+                  style={{
+                    whiteSpace: "pre-wrap",
+                    overflow: "auto",
+                    height: "34vh",
+                    backgroundColor: "#FFF"
+                  }}
+                >
+                  {log}
+                </div>
+              </Col>
+              <Col span={1}>
+                <div style={{ height: "34vh" }}>
+                  <Button
+                    type="link"
+                    icon="delete"
+                    onClick={() => {
+                      setLogArr([]);
+                      setLog("");
+                    }}
+                  />
+                </div>
+              </Col>
+            </Row>
           </Card>
         </div>
       </SplitPane>
