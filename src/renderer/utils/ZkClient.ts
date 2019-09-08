@@ -1,19 +1,29 @@
-import { Client, Event } from "node-zookeeper-client";
+import { Client, Event, Stat } from "node-zookeeper-client";
 import { MomentInput } from "moment";
 
 const moment = require("moment");
 
 const { Buffer } = window.require("buffer");
-let nodeZookeeperClient = window.require("node-zookeeper-client");
+const nodeZookeeperClient = window.require("node-zookeeper-client");
+const zookeeperClusterClient = window.require("zookeeper-cluster-client");
 
 class ZkClient {
-  client?: Client;
+  client?: any;
 
   async connect(connectionString: string) {
     if (this.client) return;
     const promise = new Promise<Client>(resolve => {
+      // let client = zookeeperClusterClient.createClient(connectionString);
       let client = nodeZookeeperClient.createClient(connectionString) as Client;
       client.once("connected", () => {
+        // client.watchChildren("/", (err: any, children: any, stat: any) => {
+        //   if (err) {
+        //     handle error
+        // return;
+        // }
+        // console.log("children => %j", children);
+        // console.log("stat => %s", stat);
+        // });
         resolve(client);
       });
       client.connect();
@@ -30,29 +40,50 @@ class ZkClient {
   }
 
   async getChildren(path: string, watcher: (event: Event) => void) {
+    // return this.client.getChildren(
+    //   path,
+    //   watcher,
+    // (error: any, children: any, stat: any) => {
+    //   console.log(error);
+    //   console.log(children);
+    //   console.log(stat);
+    // resolve(children);
+    // }
+    // );
+    // console.log(a);
+
     return new Promise(resolve => {
-      (this.client as Client).getChildren(path, watcher, (error, children) => {
-        resolve(children);
-      });
+      this.client.getChildren(
+        path,
+        watcher,
+        (error: any, children: any, stat: any) => {
+          // console.log(stat);
+          resolve(children);
+        }
+      );
     });
   }
 
   async remove(path: string) {
     return new Promise(resolve => {
-      (this.client as Client).remove(path, () => {
+      this.client.removeAll(path, (e: any) => {
+        console.log(path);
+        console.log(e);
         resolve();
       });
     });
   }
 
-  async create(path: string, data: string) {
+  async create(path: string, data: string, mode: number = 0) {
+    // return this.client.create(path);
+
     return new Promise(resolve => {
       let client = this.client as Client;
       if (data) {
         let buffer = Buffer.from(data);
-        client.create(path, buffer, () => resolve());
+        client.create(path, buffer, mode, () => resolve());
       } else {
-        client.create(path, () => resolve());
+        client.create(path, mode, () => resolve());
       }
     });
   }

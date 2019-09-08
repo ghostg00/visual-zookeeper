@@ -1,4 +1,10 @@
-import React, { RefObject, useEffect, useRef, useState } from "react";
+import React, {
+  ChangeEventHandler,
+  RefObject,
+  useEffect,
+  useRef,
+  useState
+} from "react";
 import { connect } from "dva";
 import {
   Button,
@@ -20,7 +26,7 @@ import {
 } from "antd";
 import { AnyAction, Dispatch } from "redux";
 import { StateType } from "@/pages/home/model";
-import { TreeProps } from "antd/es/tree";
+import { AntTreeNode, TreeProps } from "antd/es/tree";
 import { TreeNodeNormal } from "antd/es/tree/Tree";
 import { SearchProps } from "antd/es/input";
 import SplitPane from "react-split-pane";
@@ -31,13 +37,18 @@ import { Event } from "node-zookeeper-client";
 import style from "./style.less";
 import { FormComponentProps } from "antd/es/form";
 import { ModalProps } from "antd/es/modal";
+import InputElement from "antd/es/auto-complete/InputElement";
 
 const moment = require("moment");
 
-const { TreeNode, DirectoryTree } = Tree;
+const { TreeNode } = Tree;
 const { Search, TextArea } = Input;
 const { TabPane } = Tabs;
 const ButtonGroup = Button.Group;
+
+const IconFont = Icon.createFromIconfontCN({
+  scriptUrl: "//at.alicdn.com/t/font_1396433_vjkoke3azt.js"
+});
 
 interface HomeProps {
   home: StateType;
@@ -97,7 +108,8 @@ function Home(props: HomeProps) {
 
   useEffect(() => {
     logEvent.on("log", (event: Event) => {
-      console.log("log", event);
+      // console.log("log", event);
+      // console.log("logArr", logArr);
       logArr.length == 20 && logArr.shift();
       logArr.push(
         `${moment().format("YYYY-MM-DD HH:mm:ss SSS")}: ${event.toString()}`
@@ -129,40 +141,84 @@ function Home(props: HomeProps) {
     });
   };
 
-  const onLoadData: TreeProps["loadData"] = node =>
-    new Promise(resolve => {
+  const onLoadData: TreeProps["loadData"] = node => {
+    return new Promise(resolve => {
       let path = node.props.eventKey;
       if (node.props.children) {
         resolve();
         return;
       }
-      dispatch({
-        type: "home/getChildren",
-        payload: { path },
-        callback(data: string[]) {
-          node.props.dataRef.children = data.map(item => {
-            return {
-              title: item,
-              key: `${path}/${item}`
-            };
-          });
-          setTreeData(treeData);
-          resolve();
-        }
-      });
+      refreshTreeNode(path, node, resolve);
     });
+  };
+
+  const refreshTreeNode = (
+    path: string | undefined,
+    node: AntTreeNode,
+    resolve: any
+  ) => {
+    dispatch({
+      type: "home/getChildren",
+      payload: { path },
+      callback(data: string[]) {
+        console.log("refreshTreeNode getChildren", data);
+        node.props.dataRef.children = data.map(item => {
+          return {
+            title: item,
+            key: `${path}/${item}`
+          };
+        });
+        setTreeData([...treeData]);
+        resolve();
+      },
+      event(event: any) {
+        console.log("refreshTreeNodeevent", event);
+        refreshTreeNode(path, node, resolve);
+      }
+    });
+  };
 
   const renderTreeNodes = (data: TreeNodeNormal[]) =>
     data.map(item => {
       if (item.children) {
         return (
-          <TreeNode title={item.title} key={item.key} dataRef={item}>
+          <TreeNode
+            title={item.title}
+            key={item.key}
+            dataRef={item}
+            icon={<IconFont type="icon-folder" />}
+          >
             {renderTreeNodes(item.children)}
           </TreeNode>
         );
       }
-      return <TreeNode key={item.key} {...item} dataRef={item} />;
+      return (
+        <TreeNode
+          key={item.key}
+          {...item}
+          dataRef={item}
+          icon={<IconFont type="icon-folder" />}
+        />
+      );
     });
+
+  const onSelectChange: ChangeEventHandler<HTMLInputElement> = e => {
+    const value = e.target.value;
+    console.log(treeData);
+    // const expandedKeys = dataList
+    //   .map(item => {
+    //     if (item.title.indexOf(value) > -1) {
+    //       return getParentKey(item.key, gData);
+    //     }
+    //     return null;
+    //   })
+    //   .filter((item, i, self) => item && self.indexOf(item) === i);
+    // this.setState({
+    //   expandedKeys,
+    //   searchValue: value,
+    //   autoExpandParent: true
+    // });
+  };
 
   const onClickTree: TreeProps["onClick"] = (e, node) => {
     setNodeName(node.props.title as string);
@@ -272,35 +328,50 @@ function Home(props: HomeProps) {
         <Search
           addonBefore="url"
           placeholder="请输入zookeeper url"
-          enterButton="连接"
+          enterButton={
+            <span>
+              <IconFont type={"icon-lianjie"} />
+              连接
+            </span>
+          }
           onSearch={connect}
           defaultValue={"106.12.84.136:2181"}
         />
         <Divider>zookeeper节点</Divider>
         <Row>
-          <Col span={18}>
-            <Search
-              placeholder="请输入节点"
-              onSearch={value => console.log(value)}
+          <Col span={16}>
+            <Input
+              placeholder="请输入节点查询"
+              suffix={<IconFont type={"icon-icon-1"} />}
+              onChange={onSelectChange}
             />
           </Col>
-          <Col span={5} push={1}>
+          <Col span={7} push={1}>
             <ButtonGroup>
               <Tooltip title="新增节点">
                 <Button
-                  icon={"plus-circle"}
-                  onClick={() => nodePath && setCreateNodeVisible(true)}
-                />
+                  onClick={() => {
+                    if (!nodePath) {
+                      message.warn("请选择节点");
+                    } else {
+                      setCreateNodeVisible(true);
+                    }
+                  }}
+                >
+                  <IconFont type={"icon-draw"} style={{ fontSize: 20 }} />
+                </Button>
               </Tooltip>
               <Tooltip title="删除节点">
-                <Button icon={"delete"} onClick={onRemove} />
+                <Button onClick={onRemove}>
+                  <IconFont type={"icon-icon-"} style={{ fontSize: 20 }} />
+                </Button>
               </Tooltip>
             </ButtonGroup>
           </Col>
         </Row>
-        <DirectoryTree loadData={onLoadData} onClick={onClickTree}>
+        <Tree showIcon loadData={onLoadData} onClick={onClickTree}>
           {renderTreeNodes(treeData)}
-        </DirectoryTree>
+        </Tree>
       </Card>
     </div>
   );
@@ -309,7 +380,7 @@ function Home(props: HomeProps) {
     <>
       <SplitPane
         split={"vertical"}
-        minSize={400}
+        minSize={450}
         defaultSize={parseInt(localStorage.getItem("splitPos") as string)}
         onChange={size => localStorage.setItem("splitPos", size.toString())}
       >
@@ -321,7 +392,15 @@ function Home(props: HomeProps) {
           >
             <div className="card-container">
               <Tabs type="card">
-                <TabPane tab="节点名" key="1">
+                <TabPane
+                  tab={
+                    <span>
+                      <IconFont type={"icon-bookmark"} />
+                      节点名
+                    </span>
+                  }
+                  key="1"
+                >
                   <Card className={style.tabsCard} bordered={false}>
                     {nodeName}
                   </Card>
@@ -348,7 +427,15 @@ function Home(props: HomeProps) {
                     </Col>
                   </Row>
                 </TabPane>
-                <TabPane tab="节点值" key="2">
+                <TabPane
+                  tab={
+                    <span>
+                      <IconFont type={"icon-notebook1"} />
+                      节点数据
+                    </span>
+                  }
+                  key="2"
+                >
                   <Card className={style.tabsCard} bordered={false}>
                     <TextArea
                       rows={4}
@@ -362,13 +449,22 @@ function Home(props: HomeProps) {
                     <Col>
                       <div style={{ margin: 5, height: "4vh" }}>
                         <Button type="primary" onClick={onSetData}>
+                          <IconFont type={"icon-paper-plane"} />
                           保存
                         </Button>
                       </div>
                     </Col>
                   </Row>
                 </TabPane>
-                <TabPane tab="节点属性" key="3">
+                <TabPane
+                  tab={
+                    <span>
+                      <IconFont type={"icon-checklist"} />
+                      节点属性
+                    </span>
+                  }
+                  key="3"
+                >
                   <Table
                     columns={columns}
                     dataSource={home.nodeStat}
@@ -378,7 +474,15 @@ function Home(props: HomeProps) {
                     scroll={{ y: "42.5vh" }}
                   />
                 </TabPane>
-                <TabPane tab="节点权限" key="4">
+                <TabPane
+                  tab={
+                    <span>
+                      <IconFont type={"icon-lock"} />
+                      节点权限
+                    </span>
+                  }
+                  key="4"
+                >
                   <Card className={style.tabsCard} bordered={false}>
                     <Descriptions
                       bordered
@@ -425,14 +529,17 @@ function Home(props: HomeProps) {
               </Col>
               <Col span={1}>
                 <div style={{ height: "34vh" }}>
-                  <Button
-                    type="link"
-                    icon="delete"
-                    onClick={() => {
-                      setLogArr([]);
-                      setLog("");
-                    }}
-                  />
+                  <Tooltip title={"清空日志"}>
+                    <Button
+                      type="link"
+                      onClick={() => {
+                        setLogArr([...logArr]);
+                        setLog("");
+                      }}
+                    >
+                      <IconFont type={"icon-shuazi"} style={{ fontSize: 20 }} />
+                    </Button>
+                  </Tooltip>
                 </div>
               </Col>
             </Row>
@@ -450,15 +557,8 @@ function Home(props: HomeProps) {
   );
 }
 
-const mapStateToProps = ({
-  home,
-  loading
-}: {
-  home: StateType;
-  loading: { models: { [key: string]: boolean } };
-}) => ({
-  home,
-  loading: loading.models.home
+const mapStateToProps = ({ home }: { home: StateType }) => ({
+  home
 });
 
 export default connect(mapStateToProps)(Home);

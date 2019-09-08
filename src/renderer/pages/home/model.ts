@@ -21,13 +21,11 @@ const model: ModelType<StateType> = {
       );
       data && callback && callback(data);
     },
-    *getChildren({ payload, callback }, { call, put }) {
+    *getChildren({ payload, callback, event }, { call, put }) {
       const data = yield call(
         [zkClient, zkClient.getChildren],
         payload.path,
-        (event: Event) => {
-          logEvent.emit("log", event);
-        }
+        event
       );
       callback && callback(data);
     },
