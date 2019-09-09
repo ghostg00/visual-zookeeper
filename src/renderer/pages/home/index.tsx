@@ -96,6 +96,10 @@ const CreateNodeForm = Form.create<CreateNodeFormProps>({ name: "from" })(
 function Home(props: HomeProps) {
   const { dispatch, home } = props;
   const [treeData, setTreeData] = useState<TreeNodeNormal[]>([]);
+  const [searchValue, setSearchValue] = useState("");
+  const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
+  const [autoExpandParent, setAutoExpandParent] = useState(false);
+
   const [nodePath, setNodePath] = useState("");
   const [nodeName, setNodeName] = useState("");
   const [nodeData, setNodeData] = useState("");
@@ -137,6 +141,7 @@ function Home(props: HomeProps) {
             setTreeData(treeData);
           }
         });
+        localStorage.setItem("connectionString", value);
       }
     });
   };
@@ -180,10 +185,28 @@ function Home(props: HomeProps) {
 
   const renderTreeNodes = (data: TreeNodeNormal[]) =>
     data.map(item => {
+      const oldTitle = item.title as string;
+      console.log(oldTitle);
+      const index = oldTitle.indexOf(searchValue);
+      const beforeStr = oldTitle.substr(0, index);
+      const afterStr = oldTitle.substr(index + searchValue.length);
+      const title =
+        index > -1 ? (
+          <span>
+            {beforeStr}
+            <span style={{ color: "#f50", backgroundColor: "#3390FF" }}>
+              {searchValue}
+            </span>
+            {afterStr}
+          </span>
+        ) : (
+          <span>{item.title}</span>
+        );
+      console.log(title);
       if (item.children) {
         return (
           <TreeNode
-            title={item.title}
+            title={title}
             key={item.key}
             dataRef={item}
             icon={<IconFont type="icon-folder" />}
@@ -195,29 +218,59 @@ function Home(props: HomeProps) {
       return (
         <TreeNode
           key={item.key}
-          {...item}
+          title={title}
           dataRef={item}
           icon={<IconFont type="icon-folder" />}
         />
       );
     });
 
+  const getParentKey = (key: string, tree: TreeNodeNormal[]) => {
+    let parentKey: string = "";
+    for (let i = 0; i < tree.length; i++) {
+      const node = tree[i];
+      if (node.children) {
+        if (node.children.some(item => item.key === key)) {
+          parentKey = node.key;
+        } else if (getParentKey(key, node.children)) {
+          parentKey = getParentKey(key, node.children);
+        }
+      }
+    }
+    return parentKey;
+  };
+
   const onSelectChange: ChangeEventHandler<HTMLInputElement> = e => {
     const value = e.target.value;
     console.log(treeData);
-    // const expandedKeys = dataList
-    //   .map(item => {
-    //     if (item.title.indexOf(value) > -1) {
-    //       return getParentKey(item.key, gData);
-    //     }
-    //     return null;
-    //   })
-    //   .filter((item, i, self) => item && self.indexOf(item) === i);
-    // this.setState({
-    //   expandedKeys,
-    //   searchValue: value,
-    //   autoExpandParent: true
-    // });
+    const dataList: { key: string; title: string }[] = [];
+    const generateList = (data: TreeNodeNormal[]) => {
+      for (let i = 0; i < data.length; i++) {
+        const node = data[i];
+        const { key } = node;
+        dataList.push({ key, title: key });
+        if (node.children) {
+          generateList(node.children);
+        }
+      }
+    };
+    generateList(treeData);
+    const expandedKeys = dataList
+      .map(item => {
+        if (item.title.indexOf(value) > -1) {
+          return getParentKey(item.key, treeData);
+        }
+        return null;
+      })
+      .filter((item, i, self) => item && self.indexOf(item) === i);
+    setSearchValue(value);
+    setExpandedKeys(expandedKeys as string[]);
+    setAutoExpandParent(true);
+  };
+
+  const onExpand = (expandedKeys: string[]) => {
+    setExpandedKeys(expandedKeys);
+    setAutoExpandParent(false);
   };
 
   const onClickTree: TreeProps["onClick"] = (e, node) => {
@@ -335,15 +388,18 @@ function Home(props: HomeProps) {
             </span>
           }
           onSearch={connect}
-          defaultValue={"106.12.84.136:2181"}
+          defaultValue={
+            localStorage.getItem("connectionString") || "106.12.84.136:2181"
+          }
         />
         <Divider>zookeeper节点</Divider>
         <Row>
           <Col span={16}>
             <Input
-              placeholder="请输入节点查询"
+              placeholder="请输入节点查询(已加载节点)"
               suffix={<IconFont type={"icon-icon-1"} />}
               onChange={onSelectChange}
+              allowClear
             />
           </Col>
           <Col span={7} push={1}>
@@ -369,7 +425,14 @@ function Home(props: HomeProps) {
             </ButtonGroup>
           </Col>
         </Row>
-        <Tree showIcon loadData={onLoadData} onClick={onClickTree}>
+        <Tree
+          showIcon
+          loadData={onLoadData}
+          onClick={onClickTree}
+          onExpand={onExpand}
+          expandedKeys={expandedKeys}
+          autoExpandParent={autoExpandParent}
+        >
           {renderTreeNodes(treeData)}
         </Tree>
       </Card>

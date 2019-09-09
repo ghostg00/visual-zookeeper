@@ -5,7 +5,6 @@ const moment = require("moment");
 
 const { Buffer } = window.require("buffer");
 const nodeZookeeperClient = window.require("node-zookeeper-client");
-const zookeeperClusterClient = window.require("zookeeper-cluster-client");
 
 class ZkClient {
   client?: any;
