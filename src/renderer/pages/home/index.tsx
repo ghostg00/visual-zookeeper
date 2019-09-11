@@ -34,12 +34,12 @@ import { ModalProps } from "antd/es/modal";
 const moment = require("moment");
 
 const { TreeNode } = Tree;
-const { Search, TextArea } = Input;
+const { TextArea } = Input;
 const { TabPane } = Tabs;
 const ButtonGroup = Button.Group;
 
 const IconFont = Icon.createFromIconfontCN({
-  scriptUrl: "//at.alicdn.com/t/font_1396433_j73yygrrl3r.js"
+  scriptUrl: "http://at.alicdn.com/t/font_1396433_j73yygrrl3r.js"
 });
 
 interface HomeProps {
