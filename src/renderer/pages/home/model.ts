@@ -1,13 +1,18 @@
 import { ModelType } from "@/declare/dva";
 import ZkClient from "@/utils/ZkClient";
 import { Event } from "node-zookeeper-client";
-import logEvent from "./LogEvent";
+import logEvent from "../../utils/LogEvent";
 
 let zkClient = new ZkClient();
 
 export interface StateType {
   nodeStat: [];
 }
+
+const event = (event: Event) => {
+  // console.log("getData", event);
+  logEvent.emit("log", event);
+};
 
 const model: ModelType<StateType> = {
   namespace: "home",
@@ -17,9 +22,13 @@ const model: ModelType<StateType> = {
     *connect({ payload, callback }, { call, put }) {
       const data = yield call(
         [zkClient, zkClient.connect],
-        payload.connectionString || "localhost:2181"
+        payload.connectionString || "127.0.0.1:2181"
       );
       data && callback && callback(data);
+    },
+    *close({ payload, callback }, { call, put }) {
+      const data = yield call([zkClient, zkClient.close]);
+      callback && callback(data);
     },
     *getChildren({ payload, callback, event }, { call, put }) {
       const data = yield call(
@@ -45,9 +54,7 @@ const model: ModelType<StateType> = {
       const data = yield call(
         [zkClient, zkClient.getData],
         payload.path,
-        (event: Event) => {
-          logEvent.emit("log", event);
-        }
+        event
       );
       yield put({
         type: "getDataReducer",
@@ -57,10 +64,10 @@ const model: ModelType<StateType> = {
     },
     *setData({ payload, callback }, { call, put }) {
       yield call([zkClient, zkClient.setData], payload.path, payload.data);
-      yield put({
-        type: "getData",
-        payload
-      });
+      // yield put({
+      //   type: "getData",
+      //   payload
+      // });
       callback && callback();
     },
     *getACL({ payload, callback }, { call, put }) {

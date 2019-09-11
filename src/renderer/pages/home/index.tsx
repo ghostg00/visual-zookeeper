@@ -1,10 +1,4 @@
-import React, {
-  ChangeEventHandler,
-  RefObject,
-  useEffect,
-  useRef,
-  useState
-} from "react";
+import React, { ChangeEventHandler, useEffect, useRef, useState } from "react";
 import { connect } from "dva";
 import {
   Button,
@@ -28,16 +22,14 @@ import { AnyAction, Dispatch } from "redux";
 import { StateType } from "@/pages/home/model";
 import { AntTreeNode, TreeProps } from "antd/es/tree";
 import { TreeNodeNormal } from "antd/es/tree/Tree";
-import { SearchProps } from "antd/es/input";
 import SplitPane from "react-split-pane";
 import { ZkACL } from "@/utils/ZkClient";
-import logEvent from "./LogEvent";
+import logEvent from "../../utils/LogEvent";
 import { Event } from "node-zookeeper-client";
 
 import style from "./style.less";
 import { FormComponentProps } from "antd/es/form";
 import { ModalProps } from "antd/es/modal";
-import InputElement from "antd/es/auto-complete/InputElement";
 
 const moment = require("moment");
 
@@ -47,7 +39,7 @@ const { TabPane } = Tabs;
 const ButtonGroup = Button.Group;
 
 const IconFont = Icon.createFromIconfontCN({
-  scriptUrl: "//at.alicdn.com/t/font_1396433_vjkoke3azt.js"
+  scriptUrl: "//at.alicdn.com/t/font_1396433_j73yygrrl3r.js"
 });
 
 interface HomeProps {
@@ -93,9 +85,17 @@ const CreateNodeForm = Form.create<CreateNodeFormProps>({ name: "from" })(
   }
 );
 
+let logArr: string[] = [];
+
 function Home(props: HomeProps) {
   const { dispatch, home } = props;
+
+  const [url, setUrl] = useState(
+    localStorage.getItem("connectionString") || "127.0.0.1:2181"
+  );
   const [treeData, setTreeData] = useState<TreeNodeNormal[]>([]);
+  const [loadedKeys, setLoadedKeys] = useState<string[]>([]);
+  const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
   const [autoExpandParent, setAutoExpandParent] = useState(false);
@@ -103,22 +103,18 @@ function Home(props: HomeProps) {
   const [nodePath, setNodePath] = useState("");
   const [nodeName, setNodeName] = useState("");
   const [nodeData, setNodeData] = useState("");
-  const [createNodeVisible, setCreateNodeVisible] = useState(false);
   const [nodeACL, setNodeACL] = useState<ZkACL>(new ZkACL("", "", ""));
+  const [createNodeVisible, setCreateNodeVisible] = useState(false);
   const [formRef, setFormRef] = useState<any>();
-  const [logArr, setLogArr] = useState<string[]>([]);
   const [log, setLog] = useState("");
   const logDiv = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    logEvent.on("log", (event: Event) => {
-      // console.log("log", event);
-      // console.log("logArr", logArr);
-      logArr.length == 20 && logArr.shift();
+    logEvent.on("log", (args: any) => {
+      logArr.length >= 50 && logArr.shift();
       logArr.push(
-        `${moment().format("YYYY-MM-DD HH:mm:ss SSS")}: ${event.toString()}`
+        `${moment().format("YYYY-MM-DD HH:mm:ss SSS")}:   ${args.toString()}`
       );
-      setLogArr(logArr);
       setLog(logArr.join("\n"));
       if (logDiv.current != null) {
         logDiv.current.scrollTop = logDiv.current.scrollHeight;
@@ -126,22 +122,47 @@ function Home(props: HomeProps) {
     });
   }, []);
 
-  const connect: SearchProps["onSearch"] = value => {
+  const connect = () => {
     dispatch({
       type: "home/connect",
-      payload: { connectionString: value }, //118.25.172.148:2181
+      payload: { connectionString: url },
       callback() {
         dispatch({
           type: "home/getChildren",
           payload: { path: "/" },
           callback(data: string[]) {
-            let treeData: TreeNodeNormal[] = data.map(item => {
-              return { title: item, key: `/${item}` };
-            });
-            setTreeData(treeData);
+            setTreeData(
+              data.map(item => {
+                return { title: item, key: `/${item}` };
+              })
+            );
+          },
+          event(event: Event) {
+            // console.log("refreshTreeNode", event);
+            logEvent.emit("log", event);
+            // if (event.getType() == 4) {
+            // refreshTreeNode(path, node, true, resolve);
+            // }
           }
         });
-        localStorage.setItem("connectionString", value);
+        localStorage.setItem("connectionString", url);
+        message.success("连接成功");
+      }
+    });
+  };
+
+  const close = () => {
+    dispatch({
+      type: "home/close",
+      callback() {
+        setExpandedKeys([]);
+        setLoadedKeys([]);
+        setTreeData([]);
+        setNodePath("");
+        setNodeName("");
+        setNodeData("");
+        setNodeACL(new ZkACL("", "", ""));
+        message.success("断开连接成功");
       }
     });
   };
@@ -153,40 +174,48 @@ function Home(props: HomeProps) {
         resolve();
         return;
       }
-      refreshTreeNode(path, node, resolve);
+      refreshTreeNode(path, node, true, resolve);
     });
   };
 
   const refreshTreeNode = (
     path: string | undefined,
     node: AntTreeNode,
+    watcher: any = false,
     resolve: any
   ) => {
+    let event: any = null;
+    if (watcher) {
+      event = (event: Event) => {
+        // console.log("refreshTreeNode", event);
+        logEvent.emit("log", event);
+        if (event.getType() == 4) {
+          refreshTreeNode(path, node, true, resolve);
+        }
+      };
+    }
     dispatch({
       type: "home/getChildren",
       payload: { path },
       callback(data: string[]) {
-        console.log("refreshTreeNode getChildren", data);
-        node.props.dataRef.children = data.map(item => {
-          return {
-            title: item,
-            key: `${path}/${item}`
-          };
-        });
+        if (data) {
+          node.props.dataRef.children = data.map(item => {
+            return {
+              title: item,
+              key: `${path}/${item}`
+            };
+          });
+        }
         setTreeData([...treeData]);
         resolve();
       },
-      event(event: any) {
-        console.log("refreshTreeNodeevent", event);
-        refreshTreeNode(path, node, resolve);
-      }
+      event
     });
   };
 
   const renderTreeNodes = (data: TreeNodeNormal[]) =>
     data.map(item => {
       const oldTitle = item.title as string;
-      console.log(oldTitle);
       const index = oldTitle.indexOf(searchValue);
       const beforeStr = oldTitle.substr(0, index);
       const afterStr = oldTitle.substr(index + searchValue.length);
@@ -202,14 +231,13 @@ function Home(props: HomeProps) {
         ) : (
           <span>{item.title}</span>
         );
-      console.log(title);
       if (item.children) {
         return (
           <TreeNode
             title={title}
             key={item.key}
             dataRef={item}
-            icon={<IconFont type="icon-folder" />}
+            icon={<IconFont type="icon-wenjian-" style={{ fontSize: 20 }} />}
           >
             {renderTreeNodes(item.children)}
           </TreeNode>
@@ -220,7 +248,7 @@ function Home(props: HomeProps) {
           key={item.key}
           title={title}
           dataRef={item}
-          icon={<IconFont type="icon-folder" />}
+          icon={<IconFont type="icon-wenjian-" style={{ fontSize: 20 }} />}
         />
       );
     });
@@ -242,7 +270,6 @@ function Home(props: HomeProps) {
 
   const onSelectChange: ChangeEventHandler<HTMLInputElement> = e => {
     const value = e.target.value;
-    console.log(treeData);
     const dataList: { key: string; title: string }[] = [];
     const generateList = (data: TreeNodeNormal[]) => {
       for (let i = 0; i < data.length; i++) {
@@ -273,9 +300,10 @@ function Home(props: HomeProps) {
     setAutoExpandParent(false);
   };
 
-  const onClickTree: TreeProps["onClick"] = (e, node) => {
-    setNodeName(node.props.title as string);
-    const path = node.props.eventKey as string;
+  const onSelectTree: TreeProps["onSelect"] = (selectedKeys, e) => {
+    setSelectedKeys(selectedKeys);
+    setNodeName(e.node.props.title as string);
+    const path = e.node.props.eventKey as string;
     setNodePath(path);
     dispatch({
       type: "home/getData",
@@ -378,20 +406,23 @@ function Home(props: HomeProps) {
         }}
         hoverable
       >
-        <Search
-          addonBefore="url"
-          placeholder="请输入zookeeper url"
-          enterButton={
-            <span>
-              <IconFont type={"icon-lianjie"} />
-              连接
-            </span>
-          }
-          onSearch={connect}
-          defaultValue={
-            localStorage.getItem("connectionString") || "106.12.84.136:2181"
-          }
-        />
+        <Row>
+          <Col span={15}>
+            <Input
+              addonBefore="url"
+              placeholder="请输入zookeeper url"
+              value={url}
+              defaultValue={
+                localStorage.getItem("connectionString") || "106.12.84.136:2181"
+              }
+              onChange={event => setUrl(event.target.value)}
+            />
+          </Col>
+          <Col span={9}>
+            <Button onClick={connect}>连接</Button>
+            <Button onClick={close}>断开</Button>
+          </Col>
+        </Row>
         <Divider>zookeeper节点</Divider>
         <Row>
           <Col span={16}>
@@ -427,8 +458,11 @@ function Home(props: HomeProps) {
         </Row>
         <Tree
           showIcon
+          selectedKeys={selectedKeys}
           loadData={onLoadData}
-          onClick={onClickTree}
+          loadedKeys={loadedKeys}
+          onLoad={keys => setLoadedKeys(keys)}
+          onSelect={onSelectTree}
           onExpand={onExpand}
           expandedKeys={expandedKeys}
           autoExpandParent={autoExpandParent}
@@ -553,13 +587,13 @@ function Home(props: HomeProps) {
                       layout={"horizontal"}
                       column={1}
                     >
-                      <Descriptions.Item label="Schema(权限模式)" span={2}>
+                      <Descriptions.Item label="Schema(权限模式)">
                         {nodeACL.scheme}
                       </Descriptions.Item>
                       <Descriptions.Item label="ID(授权对象)">
                         {nodeACL.id}
                       </Descriptions.Item>
-                      <Descriptions.Item label="Permission(权限)" span={2}>
+                      <Descriptions.Item label="Permission(权限)">
                         {nodeACL.permissions}
                       </Descriptions.Item>
                     </Descriptions>
@@ -596,7 +630,7 @@ function Home(props: HomeProps) {
                     <Button
                       type="link"
                       onClick={() => {
-                        setLogArr([...logArr]);
+                        logArr = [];
                         setLog("");
                       }}
                     >
