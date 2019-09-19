@@ -5,9 +5,7 @@ import logEvent from "../../utils/LogEvent";
 
 let zkClient = new ZkClient();
 
-export interface StateType {
-  nodeStat: [];
-}
+export interface StateType {}
 
 const event = (event: Event) => {
   // console.log("getData", event);
@@ -16,7 +14,7 @@ const event = (event: Event) => {
 
 const model: ModelType<StateType> = {
   namespace: "home",
-  state: { nodeStat: [] },
+  state: {},
 
   effects: {
     *connect({ payload, callback }, { call, put }) {
@@ -60,7 +58,7 @@ const model: ModelType<StateType> = {
         type: "getDataReducer",
         payload: data
       });
-      callback && callback(data[0]);
+      callback && callback(data);
     },
     *setData({ payload, callback }, { call, put }) {
       yield call([zkClient, zkClient.setData], payload.path, payload.data);
@@ -75,12 +73,7 @@ const model: ModelType<StateType> = {
       callback && callback(data);
     }
   },
-  // @ts-ignore
-  reducers: {
-    getDataReducer(state, { payload }) {
-      return { ...state, nodeStat: payload[1] };
-    }
-  }
+  reducers: {}
 };
 
 export default model;

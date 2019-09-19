@@ -18,7 +18,7 @@ import {
   Tooltip,
   Tree
 } from "antd";
-import { AnyAction, Dispatch } from "redux";
+import { Dispatch } from "redux";
 import { StateType } from "@/pages/home/model";
 import { AntTreeNode, TreeProps } from "antd/es/tree";
 import { TreeNodeNormal } from "antd/es/tree/Tree";
@@ -44,7 +44,7 @@ const IconFont = Icon.createFromIconfontCN({
 
 interface HomeProps {
   home: StateType;
-  dispatch: Dispatch<AnyAction>;
+  dispatch: Dispatch;
 }
 
 interface CreateNodeFormProps extends FormComponentProps {
@@ -88,7 +88,7 @@ const CreateNodeForm = Form.create<CreateNodeFormProps>({ name: "from" })(
 let logArr: string[] = [];
 
 function Home(props: HomeProps) {
-  const { dispatch, home } = props;
+  const { dispatch } = props;
 
   const [url, setUrl] = useState(
     localStorage.getItem("connectionString") || "127.0.0.1:2181"
@@ -103,6 +103,7 @@ function Home(props: HomeProps) {
   const [nodePath, setNodePath] = useState("");
   const [nodeName, setNodeName] = useState("");
   const [nodeData, setNodeData] = useState("");
+  const [nodeStat, setNodeStat] = useState([]);
   const [nodeACL, setNodeACL] = useState<ZkACL>(new ZkACL("", "", ""));
   const [createNodeVisible, setCreateNodeVisible] = useState(false);
   const [formRef, setFormRef] = useState<any>();
@@ -127,27 +128,30 @@ function Home(props: HomeProps) {
       type: "home/connect",
       payload: { connectionString: url },
       callback() {
-        dispatch({
-          type: "home/getChildren",
-          payload: { path: "/" },
-          callback(data: string[]) {
-            setTreeData(
-              data.map(item => {
-                return { title: item, key: `/${item}` };
-              })
-            );
-          },
-          event(event: Event) {
-            // console.log("refreshTreeNode", event);
-            logEvent.emit("log", event);
-            // if (event.getType() == 4) {
-            // refreshTreeNode(path, node, true, resolve);
-            // }
-          }
-        });
+        refreshRootTreeNode();
+        setNodePath("/");
         localStorage.setItem("connectionString", url);
         message.success("连接成功");
       }
+    });
+  };
+
+  const refreshRootTreeNode = () => {
+    let event: any = (event: Event) => {
+      logEvent.emit("log", event);
+      refreshRootTreeNode();
+    };
+    dispatch({
+      type: "home/getChildren",
+      payload: { path: "/" },
+      callback(data: string[]) {
+        setTreeData(
+          data.map(item => {
+            return { title: item, key: `/${item}` };
+          })
+        );
+      },
+      event
     });
   };
 
@@ -187,7 +191,6 @@ function Home(props: HomeProps) {
     let event: any = null;
     if (watcher) {
       event = (event: Event) => {
-        // console.log("refreshTreeNode", event);
         logEvent.emit("log", event);
         if (event.getType() == 4) {
           refreshTreeNode(path, node, true, resolve);
@@ -302,23 +305,32 @@ function Home(props: HomeProps) {
 
   const onSelectTree: TreeProps["onSelect"] = (selectedKeys, e) => {
     setSelectedKeys(selectedKeys);
-    setNodeName(e.node.props.title as string);
-    const path = e.node.props.eventKey as string;
-    setNodePath(path);
-    dispatch({
-      type: "home/getData",
-      payload: { path },
-      callback(nodeData: string) {
-        setNodeData(nodeData);
-      }
-    });
-    dispatch({
-      type: "home/getACL",
-      payload: { path },
-      callback(nodeACL: ZkACL) {
-        setNodeACL(nodeACL);
-      }
-    });
+    if (selectedKeys.length === 0) {
+      setNodeName("");
+      setNodePath("/");
+      setNodeData("");
+      setNodeStat([]);
+      setNodeACL(new ZkACL("", "", ""));
+    } else {
+      setNodeName(e.node.props.title as string);
+      const path = e.node.props.eventKey as string;
+      setNodePath(path);
+      dispatch({
+        type: "home/getData",
+        payload: { path },
+        callback(data: [string, []]) {
+          setNodeData(data[0]);
+          setNodeStat(data[1]);
+        }
+      });
+      dispatch({
+        type: "home/getACL",
+        payload: { path },
+        callback(nodeACL: ZkACL) {
+          setNodeACL(nodeACL);
+        }
+      });
+    }
   };
 
   const onSetData = () => {
@@ -335,7 +347,7 @@ function Home(props: HomeProps) {
     const { form } = formRef.props;
     form.validateFields((err: any, values: any) => {
       if (err) return;
-      let path = `${nodePath}/${values.nodeName}`;
+      let path = `${nodePath}${nodePath === "/" ? "" : "/"}${values.nodeName}`;
       dispatch({
         type: "home/create",
         payload: {
@@ -564,7 +576,7 @@ function Home(props: HomeProps) {
                 >
                   <Table
                     columns={columns}
-                    dataSource={home.nodeStat}
+                    dataSource={nodeStat}
                     rowKey={"name"}
                     size={"small"}
                     pagination={false}
