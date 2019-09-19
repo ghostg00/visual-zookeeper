@@ -425,7 +425,7 @@ function Home(props: HomeProps) {
               placeholder="请输入zookeeper url"
               value={url}
               defaultValue={
-                localStorage.getItem("connectionString") || "106.12.84.136:2181"
+                localStorage.getItem("connectionString") || "127.0.0.1:2181"
               }
               onChange={event => setUrl(event.target.value)}
             />
