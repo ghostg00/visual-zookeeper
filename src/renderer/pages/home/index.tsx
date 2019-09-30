@@ -11,7 +11,6 @@ import {
   Input,
   message,
   Modal,
-  Row,
   Switch,
   Table,
   Tabs,
@@ -30,6 +29,8 @@ import { Event } from "node-zookeeper-client";
 import style from "./style.less";
 import { FormComponentProps } from "antd/es/form";
 import { ModalProps } from "antd/es/modal";
+import { ColumnProps } from "antd/lib/table";
+import { Row } from "antd/lib/grid";
 
 const moment = require("moment");
 
@@ -312,7 +313,7 @@ function Home(props: HomeProps) {
       setNodeStat([]);
       setNodeACL(new ZkACL("", "", ""));
     } else {
-      setNodeName(e.node.props.title as string);
+      setNodeName((e.node.props.title as any).props.children[2]);
       const path = e.node.props.eventKey as string;
       setNodePath(path);
       dispatch({
@@ -384,7 +385,7 @@ function Home(props: HomeProps) {
     }
   };
 
-  const columns = [
+  const columns: ColumnProps<{}>[] = [
     {
       title: "名称",
       dataIndex: "name",
@@ -524,11 +525,13 @@ function Home(props: HomeProps) {
                       >
                         URL解码：
                         <Switch
-                          onChange={(checked: boolean) => {
+                          onChange={checked => {
                             if (checked) {
+                              // console.log(nodeName);
+                              // console.log(decodeURIComponent(nodeName));
                               setNodeName(decodeURIComponent(nodeName));
                             } else {
-                              setNodeName(encodeURIComponent(nodeName));
+                              // setNodeName(encodeURIComponent(nodeName));
                             }
                           }}
                         />
