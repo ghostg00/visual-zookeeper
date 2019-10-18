@@ -109,6 +109,7 @@ function Home(props: HomeProps) {
   const [createNodeVisible, setCreateNodeVisible] = useState(false);
   const [formRef, setFormRef] = useState<any>();
   const [log, setLog] = useState("");
+  const [decodeURI, setDecodeURI] = useState(false);
   const logDiv = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -526,7 +527,7 @@ function Home(props: HomeProps) {
                 >
                   <Card className={style.tabsCard} bordered={false}>
                     <div style={{ height: "22vh", overflow: "auto" }}>
-                      {nodeName}
+                      {decodeURI ? decodeURIComponent(nodeName) : nodeName}
                     </div>
                     <Row align={"middle"} justify={"center"}>
                       <Col>
@@ -539,13 +540,14 @@ function Home(props: HomeProps) {
                           URL解码：
                           <Switch
                             onChange={checked => {
-                              if (checked) {
-                                // console.log(nodeName);
-                                // console.log(decodeURIComponent(nodeName));
-                                setNodeName(decodeURIComponent(nodeName));
-                              } else {
-                                // setNodeName(encodeURIComponent(nodeName));
-                              }
+                              // if (checked) {
+                              //   console.log(nodeName);
+                              //   // console.log(decodeURIComponent(nodeName));
+                              //   setNodeName(decodeURIComponent(nodeName));
+                              // } else {
+                              //   // setNodeName(encodeURIComponent(nodeName));
+                              // }
+                              setDecodeURI(checked);
                             }}
                           />
                         </div>
