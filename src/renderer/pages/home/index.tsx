@@ -420,7 +420,7 @@ function Home(props: HomeProps) {
         hoverable
       >
         <Row>
-          <Col span={15}>
+          <Col span={11}>
             <Input
               addonBefore="url"
               placeholder="请输入zookeeper url"
@@ -431,14 +431,23 @@ function Home(props: HomeProps) {
               onChange={event => setUrl(event.target.value)}
             />
           </Col>
-          <Col span={9}>
-            <Button onClick={connect}>连接</Button>
-            <Button onClick={close}>断开</Button>
+          <Col span={12} offset={1}>
+            <Button
+              type={"primary"}
+              onClick={connect}
+              style={{ marginRight: 5 }}
+            >
+              连接
+            </Button>
+            <Button type={"primary"} onClick={close} style={{ marginRight: 5 }}>
+              断开
+            </Button>
+            <Button type={"primary"}>刷新</Button>
           </Col>
         </Row>
         <Divider>zookeeper节点</Divider>
         <Row>
-          <Col span={16}>
+          <Col span={12}>
             <Input
               placeholder="请输入节点查询(已加载节点)"
               suffix={<IconFont type={"icon-icon-1"} />}
@@ -446,10 +455,11 @@ function Home(props: HomeProps) {
               allowClear
             />
           </Col>
-          <Col span={7} push={1}>
+          <Col span={11} push={1}>
             <ButtonGroup>
               <Tooltip title="新增节点">
                 <Button
+                  style={{ marginRight: 5 }}
                   onClick={() => {
                     if (!nodePath) {
                       message.warn("请选择节点");
@@ -458,12 +468,14 @@ function Home(props: HomeProps) {
                     }
                   }}
                 >
-                  <IconFont type={"icon-draw"} style={{ fontSize: 20 }} />
+                  新增节点
+                  {/*<IconFont type={"icon-draw"} style={{ fontSize: 20 }} />*/}
                 </Button>
               </Tooltip>
               <Tooltip title="删除节点">
                 <Button onClick={onRemove}>
-                  <IconFont type={"icon-icon-"} style={{ fontSize: 20 }} />
+                  删除节点
+                  {/*<IconFont type={"icon-icon-"} style={{ fontSize: 20 }} />*/}
                 </Button>
               </Tooltip>
             </ButtonGroup>
@@ -490,7 +502,8 @@ function Home(props: HomeProps) {
     <>
       <SplitPane
         split={"vertical"}
-        minSize={450}
+        minSize={500}
+        maxSize={800}
         defaultSize={parseInt(localStorage.getItem("splitPos") as string)}
         onChange={size => localStorage.setItem("splitPos", size.toString())}
       >
@@ -505,68 +518,56 @@ function Home(props: HomeProps) {
                 <TabPane
                   tab={
                     <span>
-                      <IconFont type={"icon-bookmark"} />
-                      节点名
+                      <IconFont type={"icon-notebook1"} />
+                      节点数据
                     </span>
                   }
                   key="1"
                 >
                   <Card className={style.tabsCard} bordered={false}>
-                    {nodeName}
-                  </Card>
-                  <Divider style={{ margin: 0 }} />
-                  <Row align={"middle"} justify={"center"}>
-                    <Col>
-                      <div
-                        style={{
-                          margin: 5,
-                          height: "4vh"
-                        }}
-                      >
-                        URL解码：
-                        <Switch
-                          onChange={checked => {
-                            if (checked) {
-                              // console.log(nodeName);
-                              // console.log(decodeURIComponent(nodeName));
-                              setNodeName(decodeURIComponent(nodeName));
-                            } else {
-                              // setNodeName(encodeURIComponent(nodeName));
-                            }
+                    <div style={{ height: "22vh", overflow: "auto" }}>
+                      {nodeName}
+                    </div>
+                    <Row align={"middle"} justify={"center"}>
+                      <Col>
+                        <div
+                          style={{
+                            margin: 5,
+                            height: "4vh"
                           }}
-                        />
-                      </div>
-                    </Col>
-                  </Row>
-                </TabPane>
-                <TabPane
-                  tab={
-                    <span>
-                      <IconFont type={"icon-notebook1"} />
-                      节点数据
-                    </span>
-                  }
-                  key="2"
-                >
-                  <Card className={style.tabsCard} bordered={false}>
+                        >
+                          URL解码：
+                          <Switch
+                            onChange={checked => {
+                              if (checked) {
+                                // console.log(nodeName);
+                                // console.log(decodeURIComponent(nodeName));
+                                setNodeName(decodeURIComponent(nodeName));
+                              } else {
+                                // setNodeName(encodeURIComponent(nodeName));
+                              }
+                            }}
+                          />
+                        </div>
+                      </Col>
+                    </Row>
                     <TextArea
                       rows={4}
                       value={nodeData}
-                      autosize={{ minRows: 8, maxRows: 16 }}
+                      autosize={{ minRows: 4, maxRows: 8 }}
                       onChange={event => setNodeData(event.target.value)}
                     />
+                    <Row align={"middle"} justify={"center"}>
+                      <Col>
+                        <div style={{ margin: 5, height: "4vh" }}>
+                          <Button type="primary" onClick={onSetData}>
+                            <IconFont type={"icon-paper-plane"} />
+                            保存
+                          </Button>
+                        </div>
+                      </Col>
+                    </Row>
                   </Card>
-                  <Divider style={{ margin: 0 }} />
-                  <Row align={"middle"} justify={"center"}>
-                    <Col>
-                      <div style={{ margin: 5, height: "4vh" }}>
-                        <Button type="primary" onClick={onSetData}>
-                          <IconFont type={"icon-paper-plane"} />
-                          保存
-                        </Button>
-                      </div>
-                    </Col>
-                  </Row>
                 </TabPane>
                 <TabPane
                   tab={
@@ -575,7 +576,7 @@ function Home(props: HomeProps) {
                       节点属性
                     </span>
                   }
-                  key="3"
+                  key="2"
                 >
                   <Table
                     columns={columns}
@@ -593,7 +594,7 @@ function Home(props: HomeProps) {
                       节点权限
                     </span>
                   }
-                  key="4"
+                  key="3"
                 >
                   <Card className={style.tabsCard} bordered={false}>
                     <Descriptions
