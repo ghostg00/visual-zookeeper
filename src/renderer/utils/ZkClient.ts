@@ -1,10 +1,15 @@
 import { Client, Event, Stat } from "node-zookeeper-client";
 import { MomentInput } from "moment";
 import logEvent from "./LogEvent";
+import { TreeNodeNormal } from "antd/es/tree/Tree";
 
 const moment = require("moment");
 const { Buffer } = window.require("buffer");
 const nodeZookeeperClient = window.require("node-zookeeper-client");
+
+interface TreeMap {
+  [key: string]: TreeMap;
+}
 
 class ZkClient {
   client?: any;
@@ -22,6 +27,7 @@ class ZkClient {
       client.connect();
     });
     this.client = await promise;
+
     return true;
   }
 
@@ -44,6 +50,39 @@ class ZkClient {
           resolve(children);
         });
       }
+    });
+  }
+  async getChildrenTree() {
+    console.log(new Date().getTime());
+    return new Promise(resolve => {
+      this.client.listSubTreeBFS("/", (error: any, children: string[]) => {
+        console.log(new Date().getTime());
+        children.shift();
+        let trees: TreeNodeNormal[] = [];
+        let list: (TreeNodeNormal & { parentKey: string })[] = children.map(
+          item => {
+            let strings = item.split("/");
+            return {
+              key: item,
+              title: strings[strings.length - 1],
+              parentKey: item.substring(0, item.lastIndexOf("/")),
+              children: []
+            };
+          }
+        );
+        for (const node1 of list) {
+          let root = true;
+          for (const node2 of list) {
+            if (node1.parentKey === node2.key) {
+              root = false;
+              (node2.children as TreeNodeNormal[]).push(node1);
+            }
+          }
+          root && trees.push(node1);
+        }
+        console.log(new Date().getTime());
+        resolve(trees);
+      });
     });
   }
 

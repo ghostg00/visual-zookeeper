@@ -56,6 +56,7 @@ function Home(props: HomeProps) {
   const [url, setUrl] = useState(
     localStorage.getItem("connectionString") || "127.0.0.1:2181"
   );
+  // const [treeData, setTreeData] = useState<TreeNodeNormal[]>([]);
   const [treeData, setTreeData] = useState<TreeNodeNormal[]>([]);
   const [loadedKeys, setLoadedKeys] = useState<string[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
@@ -106,43 +107,31 @@ function Home(props: HomeProps) {
       refreshRootTreeNode();
     };
     dispatch({
-      type: "home/getChildren",
-      payload: { path: "/" },
-      callback(data: string[]) {
-        setTreeData(
-          data.map(item => {
-            return { title: item, key: `/${item}` };
-          })
-        );
+      type: "home/getChildrenTree",
+      callback(data: TreeNodeNormal[]) {
+        console.log(data);
+        setTreeData(data);
       },
       event
     });
   };
 
-  const close = () => {
-    dispatch({
-      type: "home/close",
-      callback() {
-        setExpandedKeys([]);
-        setLoadedKeys([]);
-        setTreeData([]);
-        setNodePath("");
-        setNodeName("");
-        setNodeData("");
-        setNodeACL(new ZkACL("", "", ""));
-        message.success("断开连接成功");
-      }
-    });
-  };
-
-  const onLoadData: TreeProps["loadData"] = node => {
+  const close = async () => {
     return new Promise(resolve => {
-      let path = node.props.eventKey;
-      if (node.props.children) {
-        resolve();
-        return;
-      }
-      refreshTreeNode(path, node, true, resolve);
+      dispatch({
+        type: "home/close",
+        callback() {
+          setExpandedKeys([]);
+          setLoadedKeys([]);
+          setTreeData([]);
+          setNodePath("");
+          setNodeName("");
+          setNodeData("");
+          setNodeACL(new ZkACL("", "", ""));
+          message.success("断开连接成功");
+          resolve();
+        }
+      });
     });
   };
 
@@ -186,8 +175,9 @@ function Home(props: HomeProps) {
       const index = oldTitle.indexOf(searchValue);
       const beforeStr = oldTitle.substr(0, index);
       const afterStr = oldTitle.substr(index + searchValue.length);
-      const title =
-        index > -1 ? (
+      let title = item.title;
+      if (index > -1) {
+        title = (
           <span>
             {beforeStr}
             <span style={{ color: "#f50", backgroundColor: "#3390FF" }}>
@@ -195,16 +185,15 @@ function Home(props: HomeProps) {
             </span>
             {afterStr}
           </span>
-        ) : (
-          <span>{item.title}</span>
         );
-      if (item.children) {
+      }
+      if (item.children && item.children.length > 0) {
         return (
           <TreeNode
-            title={title}
             key={item.key}
+            title={title}
             dataRef={item}
-            icon={<IconFont type="icon-wenjian-" style={{ fontSize: 20 }} />}
+            icon={<IconFont type="icon-folder" style={{ fontSize: 20 }} />}
           >
             {renderTreeNodes(item.children)}
           </TreeNode>
@@ -405,7 +394,15 @@ function Home(props: HomeProps) {
             <Button type={"primary"} onClick={close} style={{ marginRight: 5 }}>
               断开
             </Button>
-            <Button type={"primary"}>刷新</Button>
+            <Button
+              type={"primary"}
+              onClick={async () => {
+                await close();
+                connect();
+              }}
+            >
+              刷新
+            </Button>
           </Col>
         </Row>
         <Divider>zookeeper节点</Divider>
@@ -447,9 +444,6 @@ function Home(props: HomeProps) {
         <Tree
           showIcon
           selectedKeys={selectedKeys}
-          loadData={onLoadData}
-          loadedKeys={loadedKeys}
-          onLoad={keys => setLoadedKeys(keys)}
           onSelect={onSelectTree}
           onExpand={onExpand}
           expandedKeys={expandedKeys}
@@ -500,25 +494,14 @@ function Home(props: HomeProps) {
                           }}
                         >
                           URL解码：
-                          <Switch
-                            onChange={checked => {
-                              // if (checked) {
-                              //   console.log(nodeName);
-                              //   // console.log(decodeURIComponent(nodeName));
-                              //   setNodeName(decodeURIComponent(nodeName));
-                              // } else {
-                              //   // setNodeName(encodeURIComponent(nodeName));
-                              // }
-                              setDecodeURI(checked);
-                            }}
-                          />
+                          <Switch onChange={checked => setDecodeURI(checked)} />
                         </div>
                       </Col>
                     </Row>
                     <TextArea
                       rows={4}
                       value={nodeData}
-                      autosize={{ minRows: 4, maxRows: 8 }}
+                      autosize={{ minRows: 4, maxRows: 4 }}
                       onChange={event => setNodeData(event.target.value)}
                     />
                     <Row align={"middle"} justify={"center"}>
