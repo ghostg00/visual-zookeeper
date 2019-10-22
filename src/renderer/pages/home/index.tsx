@@ -6,7 +6,6 @@ import {
   Col,
   Descriptions,
   Divider,
-  Form,
   Icon,
   Input,
   message,
@@ -27,10 +26,11 @@ import logEvent from "../../utils/LogEvent";
 import { Event } from "node-zookeeper-client";
 
 import style from "./style.less";
-import { FormComponentProps } from "antd/es/form";
-import { ModalProps } from "antd/es/modal";
 import { ColumnProps } from "antd/lib/table";
 import { Row } from "antd/lib/grid";
+import CreateNodeForm, {
+  CreateNodeFormProps
+} from "@/pages/home/components/CreateNodeForm";
 
 const moment = require("moment");
 
@@ -47,44 +47,6 @@ interface HomeProps {
   home: StateType;
   dispatch: Dispatch;
 }
-
-interface CreateNodeFormProps extends FormComponentProps {
-  visible: boolean;
-  parentNode: string;
-  onCancel: ModalProps["onCancel"];
-  onCreate: ModalProps["onOk"];
-}
-
-const CreateNodeForm = Form.create<CreateNodeFormProps>({ name: "from" })(
-  class extends React.Component<CreateNodeFormProps> {
-    render() {
-      const { visible, parentNode, onCancel, onCreate, form } = this.props;
-      const { getFieldDecorator } = form;
-      return (
-        <Modal
-          title={"添加节点"}
-          visible={visible}
-          onCancel={onCancel}
-          onOk={onCreate}
-        >
-          <Form>
-            <Form.Item label="父节点">{parentNode}</Form.Item>
-            <Form.Item label="节点名">
-              {getFieldDecorator("nodeName", {
-                rules: [{ required: true, message: "请输入节点名称" }]
-              })(<Input placeholder={"请输入节点名称"} />)}
-            </Form.Item>
-            <Form.Item label="节点值">
-              {getFieldDecorator("nodeData")(
-                <TextArea placeholder={"请输入节点值"} />
-              )}
-            </Form.Item>
-          </Form>
-        </Modal>
-      );
-    }
-  }
-);
 
 let logArr: string[] = [];
 
@@ -107,7 +69,7 @@ function Home(props: HomeProps) {
   const [nodeStat, setNodeStat] = useState([]);
   const [nodeACL, setNodeACL] = useState<ZkACL>(new ZkACL("", "", ""));
   const [createNodeVisible, setCreateNodeVisible] = useState(false);
-  const [formRef, setFormRef] = useState<any>();
+  const [formRef, setFormRef] = useState();
   const [log, setLog] = useState("");
   const [decodeURI, setDecodeURI] = useState(false);
   const logDiv = useRef<HTMLDivElement>(null);
@@ -346,7 +308,7 @@ function Home(props: HomeProps) {
   };
 
   const onCreate = () => {
-    const { form } = formRef.props;
+    const { form } = formRef.props as CreateNodeFormProps;
     form.validateFields((err: any, values: any) => {
       if (err) return;
       let path = `${nodePath}${nodePath === "/" ? "" : "/"}${values.nodeName}`;
