@@ -1,8 +1,8 @@
-# Visual-ZK
+# visual-zookeeper
 
 基于 [electron](https://electronjs.org)+[react](https://reactjs.org/) 构建的一个 [zookeeper](http://zookeeper.apache.org) 可视化客户端
 
-![图片](https://raw.githubusercontent.com/ghostg00/visual-zk/master/docs/images/visual-zookeeper.png)
+![图片](https://raw.githubusercontent.com/ghostg00/visual-zookeeper/master/docs/images/visual-zookeeper.png)
 
 ### 注：
 
