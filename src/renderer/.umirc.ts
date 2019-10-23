@@ -21,7 +21,7 @@ const config: IConfig = {
         antd: true,
         dva: true,
         dynamicImport: { webpackChunkName: true },
-        title: "visual-zk",
+        title: "visual-zookeeper",
         dll: false,
 
         routes: {

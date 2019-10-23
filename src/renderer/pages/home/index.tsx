@@ -64,6 +64,7 @@ function Home(props: HomeProps) {
   const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
   const [autoExpandParent, setAutoExpandParent] = useState(false);
 
+  const [rootNode, setRootNode] = useState("/");
   const [nodePath, setNodePath] = useState("");
   const [nodeName, setNodeName] = useState("");
   const [nodeData, setNodeData] = useState("");
@@ -100,16 +101,16 @@ function Home(props: HomeProps) {
       }
     });
   };
+  const event: any = (event: Event) => {
+    logEvent.emit("log", event);
+    refreshRootTreeNode();
+  };
 
   const refreshRootTreeNode = () => {
-    let event: any = (event: Event) => {
-      logEvent.emit("log", event);
-      refreshRootTreeNode();
-    };
     dispatch({
       type: "home/getChildrenTree",
+      payload: { rootNode },
       callback(data: TreeNodeNormal[]) {
-        console.log(data);
         setTreeData(data);
       },
       event
@@ -300,7 +301,9 @@ function Home(props: HomeProps) {
     const { form } = formRef.props as CreateNodeFormProps;
     form.validateFields((err: any, values: any) => {
       if (err) return;
-      let path = `${nodePath}${nodePath === "/" ? "" : "/"}${values.nodeName}`;
+      let path = `${nodePath}${nodePath === "/" ? "" : "/"}${
+        values.zkNodeName
+      }`;
       dispatch({
         type: "home/create",
         payload: {
@@ -372,7 +375,7 @@ function Home(props: HomeProps) {
         hoverable
       >
         <Row>
-          <Col span={11}>
+          <Col span={9}>
             <Input
               addonBefore="url"
               placeholder="请输入zookeeper url"
@@ -383,24 +386,26 @@ function Home(props: HomeProps) {
               onChange={event => setUrl(event.target.value)}
             />
           </Col>
-          <Col span={12} offset={1}>
+          <Col span={4}>
+            <Input
+              placeholder="根节点"
+              onChange={e => {
+                setRootNode(e.target.value);
+              }}
+            />
+          </Col>
+          <Col span={11}>
             <Button
               type={"primary"}
               onClick={connect}
-              style={{ marginRight: 5 }}
+              style={{ marginRight: 5, marginLeft: 5 }}
             >
               连接
             </Button>
             <Button type={"primary"} onClick={close} style={{ marginRight: 5 }}>
               断开
             </Button>
-            <Button
-              type={"primary"}
-              onClick={async () => {
-                await close();
-                connect();
-              }}
-            >
+            <Button type={"primary"} onClick={refreshRootTreeNode}>
               刷新
             </Button>
           </Col>
@@ -459,8 +464,8 @@ function Home(props: HomeProps) {
     <>
       <SplitPane
         split={"vertical"}
-        minSize={500}
-        maxSize={800}
+        minSize={550}
+        maxSize={850}
         defaultSize={parseInt(localStorage.getItem("splitPos") as string)}
         onChange={size => localStorage.setItem("splitPos", size.toString())}
       >
@@ -483,6 +488,10 @@ function Home(props: HomeProps) {
                 >
                   <Card className={style.tabsCard} bordered={false}>
                     <div style={{ height: "22vh", overflow: "auto" }}>
+                      节点路径：{nodePath}
+                      <br />
+                      <br />
+                      节点名：
                       {decodeURI ? decodeURIComponent(nodeName) : nodeName}
                     </div>
                     <Row align={"middle"} justify={"center"}>

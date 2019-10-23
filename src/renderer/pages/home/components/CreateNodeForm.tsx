@@ -4,6 +4,8 @@ import { FormComponentProps } from "antd/es/form";
 import { ModalProps } from "antd/es/modal";
 import TextArea from "antd/lib/input/TextArea";
 
+const { Item } = Form;
+
 export interface CreateNodeFormProps extends FormComponentProps {
   visible: boolean;
   parentNode: string;
@@ -23,17 +25,17 @@ class CreateNodeForm extends React.Component<CreateNodeFormProps> {
         onOk={onCreate}
       >
         <Form>
-          <Form.Item label="父节点">{parentNode}</Form.Item>
-          <Form.Item label="节点名">
-            {getFieldDecorator("nodeName", {
+          <Item label="父节点">{parentNode}</Item>
+          <Item label="节点名">
+            {getFieldDecorator("zkNodeName", {
               rules: [{ required: true, message: "请输入节点名称" }]
             })(<Input placeholder={"请输入节点名称"} />)}
-          </Form.Item>
-          <Form.Item label="节点值">
+          </Item>
+          <Item label="节点值">
             {getFieldDecorator("nodeData")(
               <TextArea placeholder={"请输入节点值"} />
             )}
-          </Form.Item>
+          </Item>
         </Form>
       </Modal>
     );

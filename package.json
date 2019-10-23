@@ -1,7 +1,7 @@
 {
   "name": "visual-zookeeper",
   "private": true,
-  "version": "0.2.0",
+  "version": "1.0.0",
   "main": "./dist/main/main.js",
   "scripts": {
     "start": "concurrently.cmd \"yarn start:main\" \"yarn start:renderer\"",
@@ -27,7 +27,7 @@
     "directories": {
       "output": "release"
     },
-    "appId": "com.ghostg00.visual-zk",
+    "appId": "com.ghostg00.visual-zookeeper",
     "asar": false,
     "win": {
       "icon": "favicon.ico"

@@ -1,7 +1,8 @@
-import { Client, Event, Stat } from "node-zookeeper-client";
+import { Client, Event, Exception, Stat } from "node-zookeeper-client";
 import { MomentInput } from "moment";
 import logEvent from "./LogEvent";
 import { TreeNodeNormal } from "antd/es/tree/Tree";
+import { message } from "antd";
 
 const moment = require("moment");
 const { Buffer } = window.require("buffer");
@@ -18,21 +19,26 @@ class ZkClient {
     if (this.client) return;
     const promise = new Promise<Client>(resolve => {
       let client = nodeZookeeperClient.createClient(connectionString) as Client;
+      let connected = false;
       client.once("connected", () => {
+        connected = true;
         resolve(client);
       });
       client.on("state", state => {
         logEvent.emit("log", state);
       });
       client.connect();
+      setTimeout(() => {
+        if (!connected) message.error("连接超时！请检查url及服务是否正常");
+      }, 3000);
     });
     this.client = await promise;
-
     return true;
   }
 
   async close() {
     return new Promise(resolve => {
+      if (!this.client) return;
       (this.client as Client).close();
       this.client = null;
       resolve();
@@ -42,7 +48,9 @@ class ZkClient {
   async getChildren(path: string, watcher: (event: Event) => void) {
     return new Promise(resolve => {
       if (watcher) {
+        console.log(watcher);
         this.client.getChildren(path, watcher, (error: any, children: any) => {
+          console.log(children);
           resolve(children);
         });
       } else {
@@ -52,37 +60,48 @@ class ZkClient {
       }
     });
   }
-  async getChildrenTree() {
-    console.log(new Date().getTime());
+  async getChildrenTree(rootNode: string, watcher: (event: Event) => void) {
+    // console.log(new Date().getTime());
     return new Promise(resolve => {
-      this.client.listSubTreeBFS("/", (error: any, children: string[]) => {
-        console.log(new Date().getTime());
-        children.shift();
-        let trees: TreeNodeNormal[] = [];
-        let list: (TreeNodeNormal & { parentKey: string })[] = children.map(
-          item => {
-            let strings = item.split("/");
-            return {
-              key: item,
-              title: strings[strings.length - 1],
-              parentKey: item.substring(0, item.lastIndexOf("/")),
-              children: []
-            };
-          }
-        );
-        for (const node1 of list) {
-          let root = true;
-          for (const node2 of list) {
-            if (node1.parentKey === node2.key) {
-              root = false;
-              (node2.children as TreeNodeNormal[]).push(node1);
+      if (!this.client) return [];
+      this.client.listSubTreeBFS(
+        rootNode.startsWith("/") ? rootNode : "/" + rootNode,
+        (error: any, children: string[]) => {
+          // console.log(new Date().getTime());
+          children.shift();
+          let trees: TreeNodeNormal[] = [];
+          let list: (TreeNodeNormal & { parentKey: string })[] = children.map(
+            item => {
+              let strings = item.split("/");
+              return {
+                key: item,
+                title: strings[strings.length - 1],
+                parentKey: item.substring(0, item.lastIndexOf("/")),
+                children: []
+              };
             }
+          );
+          for (const node1 of list) {
+            let root = true;
+            for (const node2 of list) {
+              if (node1.parentKey === node2.key) {
+                root = false;
+                (node2.children as TreeNodeNormal[]).push(node1);
+              }
+            }
+            root && trees.push(node1);
           }
-          root && trees.push(node1);
+          // console.log(new Date().getTime());
+          resolve(trees);
+          for (const child of children) {
+            this.client.getChildren(
+              child,
+              watcher,
+              (error: Exception, children: string[], stat: Stat) => {}
+            );
+          }
         }
-        console.log(new Date().getTime());
-        resolve(trees);
-      });
+      );
     });
   }
 

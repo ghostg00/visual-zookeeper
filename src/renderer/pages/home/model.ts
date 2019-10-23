@@ -37,7 +37,7 @@ const model: ModelType<StateType> = {
       callback && callback(data);
     },
     *getChildrenTree({ payload, callback, event }, { call, put }) {
-      const data = yield call([zkClient, zkClient.getChildrenTree]);
+      const data = yield call([zkClient, zkClient.getChildrenTree],payload.rootNode, event);
       callback && callback(data);
     },
     *create({ payload, callback }, { call, put }) {
