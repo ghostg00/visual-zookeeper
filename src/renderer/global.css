@@ -99,3 +99,6 @@ body {
   border-color: #fff !important;
   background: #fff !important;
 }
+.ant-card-body {
+  padding: 12px !important;
+}

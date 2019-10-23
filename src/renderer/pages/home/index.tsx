@@ -74,6 +74,7 @@ function Home(props: HomeProps) {
   const [formRef, setFormRef] = useState();
   const [log, setLog] = useState("");
   const [decodeURI, setDecodeURI] = useState(false);
+  const [isAuto, setIsAuto] = useState(localStorage.getItem("isAuto") === "1");
   const logDiv = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -113,7 +114,7 @@ function Home(props: HomeProps) {
       callback(data: TreeNodeNormal[]) {
         setTreeData(data);
       },
-      event
+      event: isAuto ? event : undefined
     });
   };
 
@@ -133,40 +134,6 @@ function Home(props: HomeProps) {
           resolve();
         }
       });
-    });
-  };
-
-  const refreshTreeNode = (
-    path: string | undefined,
-    node: AntTreeNode,
-    watcher: any = false,
-    resolve: any
-  ) => {
-    let event: any = null;
-    if (watcher) {
-      event = (event: Event) => {
-        logEvent.emit("log", event);
-        if (event.getType() == 4) {
-          refreshTreeNode(path, node, true, resolve);
-        }
-      };
-    }
-    dispatch({
-      type: "home/getChildren",
-      payload: { path },
-      callback(data: string[]) {
-        if (data) {
-          node.props.dataRef.children = data.map(item => {
-            return {
-              title: item,
-              key: `${path}/${item}`
-            };
-          });
-        }
-        setTreeData([...treeData]);
-        resolve();
-      },
-      event
     });
   };
 
@@ -405,9 +372,24 @@ function Home(props: HomeProps) {
             <Button type={"primary"} onClick={close} style={{ marginRight: 5 }}>
               断开
             </Button>
-            <Button type={"primary"} onClick={refreshRootTreeNode}>
+            <Button
+              type={"primary"}
+              onClick={refreshRootTreeNode}
+              style={{ marginRight: 5 }}
+            >
               刷新
             </Button>
+            <Tooltip title="是否自动刷新数据">
+              <Switch
+                checked={isAuto}
+                checkedChildren={<Icon type="check" />}
+                unCheckedChildren={<Icon type="close" />}
+                onChange={checked => {
+                  setIsAuto(checked);
+                  localStorage.setItem("isAuto", checked ? "1" : "0");
+                }}
+              />
+            </Tooltip>
           </Col>
         </Row>
         <Divider>zookeeper节点</Divider>
@@ -425,6 +407,7 @@ function Home(props: HomeProps) {
               <Tooltip title="新增节点">
                 <Button
                   style={{ marginRight: 5 }}
+                  disabled={!(treeData.length > 0)}
                   onClick={() => {
                     if (!nodePath) {
                       message.warn("请选择节点");
@@ -438,7 +421,7 @@ function Home(props: HomeProps) {
                 </Button>
               </Tooltip>
               <Tooltip title="删除节点">
-                <Button onClick={onRemove}>
+                <Button disabled={!(treeData.length > 0)} onClick={onRemove}>
                   删除节点
                   {/*<IconFont type={"icon-icon-"} style={{ fontSize: 20 }} />*/}
                 </Button>
@@ -446,16 +429,18 @@ function Home(props: HomeProps) {
             </ButtonGroup>
           </Col>
         </Row>
-        <Tree
-          showIcon
-          selectedKeys={selectedKeys}
-          onSelect={onSelectTree}
-          onExpand={onExpand}
-          expandedKeys={expandedKeys}
-          autoExpandParent={autoExpandParent}
-        >
-          {renderTreeNodes(treeData)}
-        </Tree>
+        <Row style={{ overflow: "auto", height: "81vh" }}>
+          <Tree
+            showIcon
+            selectedKeys={selectedKeys}
+            onSelect={onSelectTree}
+            onExpand={onExpand}
+            expandedKeys={expandedKeys}
+            autoExpandParent={autoExpandParent}
+          >
+            {renderTreeNodes(treeData)}
+          </Tree>
+        </Row>
       </Card>
     </div>
   );
@@ -464,8 +449,8 @@ function Home(props: HomeProps) {
     <>
       <SplitPane
         split={"vertical"}
-        minSize={550}
-        maxSize={850}
+        minSize={600}
+        maxSize={900}
         defaultSize={parseInt(localStorage.getItem("splitPos") as string)}
         onChange={size => localStorage.setItem("splitPos", size.toString())}
       >

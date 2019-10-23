@@ -67,7 +67,10 @@ class ZkClient {
       this.client.listSubTreeBFS(
         rootNode.startsWith("/") ? rootNode : "/" + rootNode,
         (error: any, children: string[]) => {
-          // console.log(new Date().getTime());
+          console.log(children);
+          if (!children) {
+            return [];
+          }
           children.shift();
           let trees: TreeNodeNormal[] = [];
           let list: (TreeNodeNormal & { parentKey: string })[] = children.map(
