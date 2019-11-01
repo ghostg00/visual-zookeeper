@@ -14,7 +14,7 @@
 - 优化页面风格
 
 ## 鸣谢
-- 感谢[skyued](https://github.com/skyued)做的视觉优化(待发布)
+- 感谢[Sky Lee](https://github.com/skyued)做的视觉优化(待发布)
 - 感谢[caiyunweiyang](https://github.com/caiyunweiyang)做的测试
 - 再次感谢帮助我的小伙伴们！
 
