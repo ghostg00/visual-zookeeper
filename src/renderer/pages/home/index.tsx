@@ -18,7 +18,7 @@ import {
 } from "antd";
 import { Dispatch } from "redux";
 import { StateType } from "@/pages/home/model";
-import { AntTreeNode, TreeProps } from "antd/es/tree";
+import { TreeProps } from "antd/es/tree";
 import { TreeNodeNormal } from "antd/es/tree/Tree";
 import SplitPane from "react-split-pane";
 import { ZkACL } from "@/utils/ZkClient";
@@ -31,8 +31,9 @@ import { Row } from "antd/lib/grid";
 import CreateNodeForm, {
   CreateNodeFormProps
 } from "@/pages/home/components/CreateNodeForm";
+import moment from "moment";
 
-const moment = require("moment");
+// const moment = require("moment");
 
 const { TreeNode } = Tree;
 const { TextArea } = Input;
@@ -56,9 +57,7 @@ function Home(props: HomeProps) {
   const [url, setUrl] = useState(
     localStorage.getItem("connectionString") || "127.0.0.1:2181"
   );
-  // const [treeData, setTreeData] = useState<TreeNodeNormal[]>([]);
   const [treeData, setTreeData] = useState<TreeNodeNormal[]>([]);
-  const [loadedKeys, setLoadedKeys] = useState<string[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
   const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
@@ -124,7 +123,6 @@ function Home(props: HomeProps) {
         type: "home/close",
         callback() {
           setExpandedKeys([]);
-          setLoadedKeys([]);
           setTreeData([]);
           setNodePath("");
           setNodeName("");
@@ -311,22 +309,22 @@ function Home(props: HomeProps) {
     {
       title: "名称",
       dataIndex: "name",
-      key: "name"
+      align: "center"
     },
     {
       title: "值",
       dataIndex: "value",
-      key: "value"
+      align: "center"
     },
     {
       title: "真实值",
       dataIndex: "realValue",
-      key: "realValue"
+      align: "center"
     },
     {
       title: "描述",
       dataIndex: "description",
-      key: "description"
+      align: "center"
     }
   ];
 
@@ -396,7 +394,7 @@ function Home(props: HomeProps) {
         <Row>
           <Col span={12}>
             <Input
-              placeholder="请输入节点查询(已加载节点)"
+              placeholder="请输入节点查询"
               suffix={<IconFont type={"icon-icon-1"} />}
               onChange={onSelectChange}
               allowClear
@@ -520,9 +518,9 @@ function Home(props: HomeProps) {
                   key="2"
                 >
                   <Table
+                    rowKey={"name"}
                     columns={columns}
                     dataSource={nodeStat}
-                    rowKey={"name"}
                     size={"small"}
                     pagination={false}
                     scroll={{ y: "42.5vh" }}

@@ -8,7 +8,6 @@ let zkClient = new ZkClient();
 export interface StateType {}
 
 const event = (event: Event) => {
-  // console.log("getData", event);
   logEvent.emit("log", event);
 };
 
@@ -37,7 +36,11 @@ const model: ModelType<StateType> = {
       callback && callback(data);
     },
     *getChildrenTree({ payload, callback, event }, { call, put }) {
-      const data = yield call([zkClient, zkClient.getChildrenTree],payload.rootNode, event);
+      const data = yield call(
+        [zkClient, zkClient.getChildrenTree],
+        payload.rootNode,
+        event
+      );
       callback && callback(data);
     },
     *create({ payload, callback }, { call, put }) {
@@ -66,10 +69,6 @@ const model: ModelType<StateType> = {
     },
     *setData({ payload, callback }, { call, put }) {
       yield call([zkClient, zkClient.setData], payload.path, payload.data);
-      // yield put({
-      //   type: "getData",
-      //   payload
-      // });
       callback && callback();
     },
     *getACL({ payload, callback }, { call, put }) {
