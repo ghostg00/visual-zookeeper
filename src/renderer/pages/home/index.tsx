@@ -68,7 +68,7 @@ function Home(props: HomeProps) {
   const [nodeStat, setNodeStat] = useState([]);
   const [nodeACL, setNodeACL] = useState<ZkACL>(new ZkACL("", "", ""));
   const [createNodeVisible, setCreateNodeVisible] = useState(false);
-  const [formRef, setFormRef] = useState();
+  const [formRef, setFormRef] = useState<any>({});
   const [log, setLog] = useState("");
   const [decodeURI, setDecodeURI] = useState(false);
   const [isAuto, setIsAuto] = useState(localStorage.getItem("isAuto") === "1");
