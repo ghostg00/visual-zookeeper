@@ -38,7 +38,7 @@
     "dva": "^2.4.1",
     "moment": "^2.24.0",
     "nedb": "^1.8.0",
-    "node-zookeeper-client": "^1.0.0",
+    "node-zookeeper-client": "^1.1.0",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
     "react-split-pane": "^0.1.87"

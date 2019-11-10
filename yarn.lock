@@ -10792,10 +10792,10 @@ node-releases@^1.1.13, node-releases@^1.1.29:
   dependencies:
     semver "^5.3.0"
 
-node-zookeeper-client@^1.0.0:
-  version "1.0.0"
-  resolved "https://registry.npm.taobao.org/node-zookeeper-client/download/node-zookeeper-client-1.0.0.tgz#596d38acdce777772530daff567c80e9f5f3f759"
-  integrity sha1-WW04rNznd3clMNr/VnyA6fXz91k=
+node-zookeeper-client@^1.1.0:
+  version "1.1.0"
+  resolved "https://registry.npm.taobao.org/node-zookeeper-client/download/node-zookeeper-client-1.1.0.tgz#256c5b79d00108eff349d68d1efe7a5e78933e89"
+  integrity sha1-JWxbedABCO/zSdaNHv56XniTPok=
   dependencies:
     async "~0.2.7"
     underscore "~1.4.4"
