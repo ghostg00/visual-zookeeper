@@ -33,8 +33,6 @@ import CreateNodeForm, {
 } from "@/pages/home/components/CreateNodeForm";
 import moment from "moment";
 
-// const moment = require("moment");
-
 const { TreeNode } = Tree;
 const { TextArea } = Input;
 const { TabPane } = Tabs;
