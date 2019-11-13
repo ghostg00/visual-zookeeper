@@ -4,10 +4,6 @@
 
 ![图片](https://raw.githubusercontent.com/ghostg00/visual-zookeeper/master/docs/images/visual-zookeeper.png)
 
-### 注：
-
-- 删除全部子节点功能，待 node-zookeeper-client 发布最新版 npm 包，暂从源码构建
-
 ---
 
 ## TODO
