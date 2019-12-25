@@ -17,10 +17,7 @@ const model: ModelType<StateType> = {
 
   effects: {
     *connect({ payload, callback }, { call, put }) {
-      const data = yield call(
-        [zkClient, zkClient.connect],
-        payload.connectionString || "127.0.0.1:2181"
-      );
+      const data = yield call([zkClient, zkClient.connect], payload.url);
       data && callback && callback(data);
     },
     *close({ payload, callback }, { call, put }) {

@@ -32,6 +32,7 @@ import CreateNodeForm, {
   CreateNodeFormProps
 } from "@/pages/home/components/CreateNodeForm";
 import moment from "moment";
+import { useLocalStorageState } from "@umijs/hooks";
 
 const { TreeNode } = Tree;
 const { TextArea } = Input;
@@ -52,9 +53,10 @@ let logArr: string[] = [];
 function Home(props: HomeProps) {
   const { dispatch } = props;
 
-  const [url, setUrl] = useState(
-    localStorage.getItem("connectionString") || "127.0.0.1:2181"
-  );
+  const [url, setUrl] = useLocalStorageState("url", "127.0.0.1:2181");
+  const [splitPos, setSplitPos] = useLocalStorageState("splitPos", 600);
+  const [isAuto, setIsAuto] = useLocalStorageState("isAuto", false);
+
   const [treeData, setTreeData] = useState<TreeNodeNormal[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
@@ -71,7 +73,7 @@ function Home(props: HomeProps) {
   const [formRef, setFormRef] = useState<any>({});
   const [log, setLog] = useState("");
   const [decodeURI, setDecodeURI] = useState(false);
-  const [isAuto, setIsAuto] = useState(localStorage.getItem("isAuto") === "1");
+
   const logDiv = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -90,11 +92,10 @@ function Home(props: HomeProps) {
   const connect = () => {
     dispatch({
       type: "home/connect",
-      payload: { connectionString: url },
+      payload: { url },
       callback() {
         refreshRootTreeNode();
         setNodePath("/");
-        localStorage.setItem("connectionString", url);
         message.success("连接成功");
       }
     });
@@ -343,18 +344,13 @@ function Home(props: HomeProps) {
               addonBefore="url"
               placeholder="请输入zookeeper url"
               value={url}
-              defaultValue={
-                localStorage.getItem("connectionString") || "127.0.0.1:2181"
-              }
               onChange={event => setUrl(event.target.value)}
             />
           </Col>
           <Col span={4}>
             <Input
               placeholder="根节点"
-              onChange={e => {
-                setRootNode(e.target.value);
-              }}
+              onChange={e => setRootNode(e.target.value)}
             />
           </Col>
           <Col span={11}>
@@ -380,10 +376,7 @@ function Home(props: HomeProps) {
                 checked={isAuto}
                 checkedChildren={<Icon type="check" />}
                 unCheckedChildren={<Icon type="close" />}
-                onChange={checked => {
-                  setIsAuto(checked);
-                  localStorage.setItem("isAuto", checked ? "1" : "0");
-                }}
+                onChange={checked => setIsAuto(checked)}
               />
             </Tooltip>
           </Col>
@@ -413,13 +406,11 @@ function Home(props: HomeProps) {
                   }}
                 >
                   新增节点
-                  {/*<IconFont type={"icon-draw"} style={{ fontSize: 20 }} />*/}
                 </Button>
               </Tooltip>
               <Tooltip title="删除节点">
                 <Button disabled={!(treeData.length > 0)} onClick={onRemove}>
                   删除节点
-                  {/*<IconFont type={"icon-icon-"} style={{ fontSize: 20 }} />*/}
                 </Button>
               </Tooltip>
             </ButtonGroup>
@@ -447,8 +438,8 @@ function Home(props: HomeProps) {
         split={"vertical"}
         minSize={600}
         maxSize={900}
-        defaultSize={parseInt(localStorage.getItem("splitPos") as string)}
-        onChange={size => localStorage.setItem("splitPos", size.toString())}
+        defaultSize={splitPos}
+        onChange={size => setSplitPos(size)}
       >
         {leftDiv}
         <div>

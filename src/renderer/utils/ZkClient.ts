@@ -8,17 +8,13 @@ const moment = require("moment");
 const { Buffer } = window.require("buffer");
 const nodeZookeeperClient = window.require("node-zookeeper-client");
 
-interface TreeMap {
-  [key: string]: TreeMap;
-}
-
 class ZkClient {
-  client?: any;
+  client: Client | any;
 
-  async connect(connectionString: string) {
+  async connect(url: string) {
     if (this.client) return;
     const promise = new Promise<Client>(resolve => {
-      let client = nodeZookeeperClient.createClient(connectionString) as Client;
+      let client = nodeZookeeperClient.createClient(url) as Client;
       let connected = false;
       client.once("connected", () => {
         connected = true;
@@ -61,7 +57,6 @@ class ZkClient {
     });
   }
   async getChildrenTree(rootNode: string, watcher: (event: Event) => void) {
-    // console.log(new Date().getTime());
     return new Promise(resolve => {
       if (!this.client) return [];
       this.client.listSubTreeBFS(
@@ -94,13 +89,12 @@ class ZkClient {
             }
             root && trees.push(node1);
           }
-          // console.log(new Date().getTime());
           resolve(trees);
           for (const child of children) {
             this.client.getChildren(
               child,
               watcher,
-              (error: Exception, children: string[], stat: Stat) => {}
+              (error: Error | Exception, children: string[], stat: Stat) => {}
             );
           }
         }
@@ -111,11 +105,11 @@ class ZkClient {
   async remove(path: string) {
     return new Promise(resolve => {
       if (this.client.removeRecursive) {
-        this.client.removeRecursive(path, (e: any) => {
+        this.client.removeRecursive(path, () => {
           resolve();
         });
       } else {
-        this.client.remove(path, (e: any) => {
+        this.client.remove(path, () => {
           resolve();
         });
       }

@@ -1562,10 +1562,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/node-zookeeper-client@^0.2.6":
-  version "0.2.6"
-  resolved "https://registry.npm.taobao.org/@types/node-zookeeper-client/download/@types/node-zookeeper-client-0.2.6.tgz#2d3ca9c784196f7c90d243409077ce765a926207"
-  integrity sha1-LTypx4QZb3yQ0kNAkHfOdlqSYgc=
+"@types/node-zookeeper-client@^0.2.7":
+  version "0.2.7"
+  resolved "https://registry.npm.taobao.org/@types/node-zookeeper-client/download/@types/node-zookeeper-client-0.2.7.tgz#006cc0ebe336a1b67253585dc72019b39fb6a2fe"
+  integrity sha1-AGzA6+M2obZyU1hdxyAZs5+2ov4=
   dependencies:
     "@types/node" "*"
 
@@ -1893,6 +1893,16 @@
     stylelint-config-standard "^18.3.0"
     stylelint-declaration-block-no-ignored-properties "^2.1.0"
     stylelint-order "^3.0.0"
+
+"@umijs/hooks@^1.5.1":
+  version "1.5.1"
+  resolved "https://registry.npm.taobao.org/@umijs/hooks/download/@umijs/hooks-1.5.1.tgz#d878ead9dc8adb8cd61a31475607b36a41cca21b"
+  integrity sha1-2Hjq2dyK24zWGjFHVgezakHMohs=
+  dependencies:
+    intersection-observer "^0.7.0"
+    lodash.isequal "^4.5.0"
+    resize-observer-polyfill "^1.5.1"
+    screenfull "^5.0.0"
 
 "@webassemblyjs/ast@1.7.11":
   version "1.7.11"
@@ -8270,6 +8280,11 @@ interpret@1.2.0, interpret@^1.0.0:
   resolved "https://registry.npm.taobao.org/interpret/download/interpret-1.2.0.tgz#d5061a6224be58e8083985f5014d844359576296"
   integrity sha1-1QYaYiS+WOgIOYX1AU2EQ1lXYpY=
 
+intersection-observer@^0.7.0:
+  version "0.7.0"
+  resolved "https://registry.npm.taobao.org/intersection-observer/download/intersection-observer-0.7.0.tgz#ee16bee978db53516ead2f0a8154b09b400bbdc9"
+  integrity sha1-7ha+6XjbU1FurS8KgVSwm0ALvck=
+
 intl-format-cache@^2.0.5:
   version "2.2.9"
   resolved "https://registry.npm.taobao.org/intl-format-cache/download/intl-format-cache-2.2.9.tgz?cache=0&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fintl-format-cache%2Fdownload%2Fintl-format-cache-2.2.9.tgz#fb560de20c549cda20b569cf1ffb6dc62b5b93b4"
@@ -14508,6 +14523,11 @@ scoped-regex@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npm.taobao.org/scoped-regex/download/scoped-regex-1.0.0.tgz#a346bb1acd4207ae70bd7c0c7ca9e566b6baddb8"
   integrity sha1-o0a7Gs1CB65wvXwMfKnlZra63bg=
+
+screenfull@^5.0.0:
+  version "5.0.0"
+  resolved "https://registry.npm.taobao.org/screenfull/download/screenfull-5.0.0.tgz#5c2010c0e84fd4157bf852877698f90b8cbe96f6"
+  integrity sha1-XCAQwOhP1BV7+FKHdpj5C4y+lvY=
 
 seamless-immutable@^7.1.3:
   version "7.1.4"

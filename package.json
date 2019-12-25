@@ -41,11 +41,12 @@
     "node-zookeeper-client": "^1.1.0",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
-    "react-split-pane": "^0.1.87"
+    "react-split-pane": "^0.1.87",
+    "@umijs/hooks": "^1.5.1"
   },
   "devDependencies": {
     "@types/nedb": "^1.8.9",
-    "@types/node-zookeeper-client": "^0.2.6",
+    "@types/node-zookeeper-client": "^0.2.7",
     "@types/react": "^16.7.18",
     "@types/react-dom": "^16.0.11",
     "@types/react-test-renderer": "^16.0.3",
