@@ -8,6 +8,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     height: 900,
     width: 1600,
+    frame: false,
     webPreferences: {
       nodeIntegration: true, // 是否集成 Nodejs
       webSecurity: false

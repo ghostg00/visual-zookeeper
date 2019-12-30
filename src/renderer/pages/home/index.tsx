@@ -5,7 +5,6 @@ import {
   Card,
   Col,
   Descriptions,
-  Divider,
   Icon,
   Input,
   message,
@@ -13,26 +12,25 @@ import {
   Switch,
   Table,
   Tabs,
-  Tooltip,
   Tree
 } from "antd";
 import { Dispatch } from "redux";
 import { StateType } from "@/pages/home/model";
 import { TreeProps } from "antd/es/tree";
 import { TreeNodeNormal } from "antd/es/tree/Tree";
-import SplitPane from "react-split-pane";
 import { ZkACL } from "@/utils/ZkClient";
 import logEvent from "../../utils/LogEvent";
 import { Event } from "node-zookeeper-client";
 
 import style from "./style.less";
+import logo from "../../assets/logo.png";
 import { ColumnProps } from "antd/lib/table";
 import { Row } from "antd/lib/grid";
-import CreateNodeForm, {
-  CreateNodeFormProps
-} from "@/pages/home/components/CreateNodeForm";
+import CreateNodeForm from "@/pages/home/components/CreateNodeForm";
 import moment from "moment";
 import { useLocalStorageState } from "@umijs/hooks";
+
+let electron = window.require("electron");
 
 const { TreeNode } = Tree;
 const { TextArea } = Input;
@@ -70,11 +68,11 @@ function Home(props: HomeProps) {
   const [nodeStat, setNodeStat] = useState([]);
   const [nodeACL, setNodeACL] = useState<ZkACL>(new ZkACL("", "", ""));
   const [createNodeVisible, setCreateNodeVisible] = useState(false);
-  const [formRef, setFormRef] = useState<any>({});
   const [log, setLog] = useState("");
   const [decodeURI, setDecodeURI] = useState(false);
 
   const logDiv = useRef<HTMLDivElement>(null);
+  const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     logEvent.on("log", (args: any) => {
@@ -111,6 +109,7 @@ function Home(props: HomeProps) {
       payload: { rootNode },
       callback(data: TreeNodeNormal[]) {
         setTreeData(data);
+        message.success("刷新成功");
       },
       event: isAuto ? event : undefined
     });
@@ -261,26 +260,19 @@ function Home(props: HomeProps) {
     });
   };
 
-  const onCreate = () => {
-    const { form } = formRef.props as CreateNodeFormProps;
-    form.validateFields((err: any, values: any) => {
-      if (err) return;
-      let path = `${nodePath}${nodePath === "/" ? "" : "/"}${
-        values.zkNodeName
-      }`;
-      dispatch({
-        type: "home/create",
-        payload: {
-          path,
-          nodeData: values.nodeData
-        },
-        callback() {
-          message.success(`${path}节点新增成功`);
-        }
-      });
-      form.resetFields();
-      setCreateNodeVisible(false);
+  const onCreate = (values: any) => {
+    let path = `${nodePath}${nodePath === "/" ? "" : "/"}${values.zkNodeName}`;
+    dispatch({
+      type: "home/create",
+      payload: {
+        path,
+        nodeData: values.nodeData
+      },
+      callback() {
+        message.success(`${path}节点新增成功`);
+      }
     });
+    setCreateNodeVisible(false);
   };
 
   const onRemove = () => {
@@ -308,115 +300,120 @@ function Home(props: HomeProps) {
     {
       title: "名称",
       dataIndex: "name",
-      align: "center"
+      width: 150
     },
     {
       title: "值",
       dataIndex: "value",
-      align: "center"
+      width: 200
     },
     {
       title: "真实值",
       dataIndex: "realValue",
-      align: "center"
+      ellipsis: true
     },
     {
       title: "描述",
       dataIndex: "description",
-      align: "center"
+      ellipsis: true
     }
   ];
 
-  const leftDiv = (
-    <div>
+  const leftCard = (
+    <Card
+      style={{
+        // overflow: "auto",
+        height: "91vh",
+        marginRight: 15
+      }}
+      bordered={false}
+    >
+      {/*<Row type={"flex"} align={"middle"} justify={"space-between"}>*/}
+      {/*  <Col>*/}
+      {/*    <span className={style.cardTitle}>节点选项</span>*/}
+      {/*  </Col>*/}
+      {/*<Col>*/}
+      {/*  <Input*/}
+      {/*    placeholder="根节点"*/}
+      {/*    onChange={e => setRootNode(e.target.value)}*/}
+      {/*  />*/}
+      {/*</Col>*/}
+      {/*  <Col>*/}
+      {/*    <Button type={"primary"} onClick={connect} style={{ marginRight: 5 }}>*/}
+      {/*      连接*/}
+      {/*    </Button>*/}
+      {/*    <Button type={"primary"} onClick={close}>*/}
+      {/*      断开*/}
+      {/*    </Button>*/}
+      {/*  </Col>*/}
+      {/*</Row>*/}
+      <Row type={"flex"} align={"middle"} justify={"space-between"}>
+        <Col span={14}>
+          <Input
+            style={{ marginBottom: 10, marginTop: 10 }}
+            addonBefore="URL"
+            placeholder="请输入zookeeper url"
+            value={url}
+            onChange={event => setUrl(event.target.value)}
+          />
+        </Col>
+        <Col>
+          <Button type={"primary"} onClick={connect} style={{ marginRight: 5 }}>
+            连接
+          </Button>
+          <Button type={"primary"} onClick={close}>
+            断开
+          </Button>
+        </Col>
+      </Row>
       <Card
-        style={{
-          overflow: "auto",
-          height: "98.5vh",
-          margin: 5,
-          backgroundColor: "#F5F5F5"
-        }}
-        hoverable
+        title={<span className={style.cardTitle}>zookeeper节点</span>}
+        size={"small"}
       >
-        <Row>
-          <Col span={9}>
-            <Input
-              addonBefore="url"
-              placeholder="请输入zookeeper url"
-              value={url}
-              onChange={event => setUrl(event.target.value)}
-            />
+        <Row type="flex" align="middle" justify="space-between">
+          <Col>
+            节点是否自动更新&nbsp;&nbsp;
+            <Switch checked={isAuto} onChange={checked => setIsAuto(checked)} />
           </Col>
-          <Col span={4}>
-            <Input
-              placeholder="根节点"
-              onChange={e => setRootNode(e.target.value)}
-            />
-          </Col>
-          <Col span={11}>
+          <Col>
             <Button
-              type={"primary"}
-              onClick={connect}
-              style={{ marginRight: 5, marginLeft: 5 }}
+              type={"link"}
+              icon={"plus"}
+              disabled={!(treeData.length > 0)}
+              onClick={() => {
+                if (!nodePath) {
+                  message.warn("请选择节点");
+                } else {
+                  setCreateNodeVisible(true);
+                }
+              }}
             >
-              连接
-            </Button>
-            <Button type={"primary"} onClick={close} style={{ marginRight: 5 }}>
-              断开
+              新增
             </Button>
             <Button
-              type={"primary"}
-              onClick={refreshRootTreeNode}
-              style={{ marginRight: 5 }}
+              type={"link"}
+              icon={"delete"}
+              // style={{ color: "red" }}
+              disabled={!(treeData.length > 0)}
+              onClick={onRemove}
             >
+              删除
+            </Button>
+            <Button type={"link"} icon={"reload"} onClick={refreshRootTreeNode}>
               刷新
             </Button>
-            <Tooltip title="是否自动刷新数据">
-              <Switch
-                checked={isAuto}
-                checkedChildren={<Icon type="check" />}
-                unCheckedChildren={<Icon type="close" />}
-                onChange={checked => setIsAuto(checked)}
-              />
-            </Tooltip>
           </Col>
         </Row>
-        <Divider>zookeeper节点</Divider>
         <Row>
-          <Col span={12}>
-            <Input
-              placeholder="请输入节点查询"
-              suffix={<IconFont type={"icon-icon-1"} />}
-              onChange={onSelectChange}
-              allowClear
-            />
-          </Col>
-          <Col span={11} push={1}>
-            <ButtonGroup>
-              <Tooltip title="新增节点">
-                <Button
-                  style={{ marginRight: 5 }}
-                  disabled={!(treeData.length > 0)}
-                  onClick={() => {
-                    if (!nodePath) {
-                      message.warn("请选择节点");
-                    } else {
-                      setCreateNodeVisible(true);
-                    }
-                  }}
-                >
-                  新增节点
-                </Button>
-              </Tooltip>
-              <Tooltip title="删除节点">
-                <Button disabled={!(treeData.length > 0)} onClick={onRemove}>
-                  删除节点
-                </Button>
-              </Tooltip>
-            </ButtonGroup>
-          </Col>
+          <Input
+            style={{ marginTop: 10 }}
+            placeholder="请输入节点名称查询"
+            prefix={<Icon type="search" />}
+            onChange={onSelectChange}
+            allowClear
+          />
         </Row>
-        <Row style={{ overflow: "auto", height: "81vh" }}>
+        <Row style={{ overflow: "auto", height: "67vh" }}>
           <Tree
             showIcon
             selectedKeys={selectedKeys}
@@ -429,166 +426,184 @@ function Home(props: HomeProps) {
           </Tree>
         </Row>
       </Card>
-    </div>
+    </Card>
+  );
+
+  const rightCard = (
+    <Card style={{ height: "58vh", marginBottom: 15 }} bordered={false}>
+      <div className="card-container">
+        <Tabs>
+          <TabPane
+            tab={<span className={style.cardTitle}>节点数据</span>}
+            key="1"
+          >
+            <Card className={style.tabsCard} bordered={false}>
+              <div style={{ height: "18vh", overflow: "auto" }}>
+                节点路径：{nodePath}
+                <br />
+                <br />
+                节点名：
+                {decodeURI ? decodeURIComponent(nodeName) : nodeName}
+              </div>
+              <Row align={"middle"} justify={"center"}>
+                <Col>
+                  <div
+                    style={{
+                      margin: 5,
+                      height: "4vh"
+                    }}
+                  >
+                    URL解码：
+                    <Switch onChange={checked => setDecodeURI(checked)} />
+                  </div>
+                </Col>
+              </Row>
+              <TextArea
+                rows={6}
+                value={nodeData}
+                autosize={{ minRows: 6, maxRows: 6 }}
+                onChange={event => setNodeData(event.target.value)}
+              />
+              <Row align={"middle"} justify={"center"}>
+                <Col>
+                  <div style={{ marginTop: 20, height: "4vh" }}>
+                    <Button type="primary" onClick={onSetData}>
+                      保存
+                    </Button>
+                  </div>
+                </Col>
+              </Row>
+            </Card>
+          </TabPane>
+          <TabPane
+            tab={<span className={style.cardTitle}>节点属性</span>}
+            key="2"
+          >
+            <Table
+              rowKey={"name"}
+              size={"small"}
+              columns={columns}
+              dataSource={nodeStat}
+              pagination={false}
+              scroll={{ y: "42.5vh" }}
+            />
+          </TabPane>
+          <TabPane
+            tab={<span className={style.cardTitle}>节点权限</span>}
+            key="3"
+          >
+            <Descriptions
+              bordered
+              size={"small"}
+              layout={"horizontal"}
+              column={1}
+            >
+              <Descriptions.Item label="Schema(权限模式)">
+                {nodeACL.scheme}
+              </Descriptions.Item>
+              <Descriptions.Item label="ID(授权对象)">
+                {nodeACL.id}
+              </Descriptions.Item>
+              <Descriptions.Item label="Permission(权限)">
+                {nodeACL.permissions}
+              </Descriptions.Item>
+            </Descriptions>
+          </TabPane>
+        </Tabs>
+      </div>
+    </Card>
+  );
+
+  const rightBottomCard = (
+    <Card
+      style={{
+        height: "31.5vh"
+      }}
+      title={<span className={style.cardTitle}>日志</span>}
+      bordered={false}
+      extra={
+        <Button
+          type="link"
+          icon={"delete"}
+          style={{ color: "red" }}
+          onClick={() => {
+            logArr = [];
+            setLog("");
+          }}
+        >
+          清空日志
+        </Button>
+      }
+    >
+      <div
+        ref={logDiv}
+        style={{
+          whiteSpace: "pre-wrap",
+          overflow: "auto",
+          height: "21vh",
+          border: "1px solid #E6E6E6"
+        }}
+      >
+        {log}
+      </div>
+    </Card>
   );
 
   return (
     <>
-      <SplitPane
-        split={"vertical"}
-        minSize={600}
-        maxSize={900}
-        defaultSize={splitPos}
-        onChange={size => setSplitPos(size)}
-      >
-        {leftDiv}
-        <div>
-          <Card
-            style={{ height: "58vh", margin: 5, backgroundColor: "#F5F5F5" }}
-            hoverable
-          >
-            <div className="card-container">
-              <Tabs type="card">
-                <TabPane
-                  tab={
-                    <span>
-                      <IconFont type={"icon-notebook1"} />
-                      节点数据
-                    </span>
-                  }
-                  key="1"
-                >
-                  <Card className={style.tabsCard} bordered={false}>
-                    <div style={{ height: "22vh", overflow: "auto" }}>
-                      节点路径：{nodePath}
-                      <br />
-                      <br />
-                      节点名：
-                      {decodeURI ? decodeURIComponent(nodeName) : nodeName}
-                    </div>
-                    <Row align={"middle"} justify={"center"}>
-                      <Col>
-                        <div
-                          style={{
-                            margin: 5,
-                            height: "4vh"
-                          }}
-                        >
-                          URL解码：
-                          <Switch onChange={checked => setDecodeURI(checked)} />
-                        </div>
-                      </Col>
-                    </Row>
-                    <TextArea
-                      rows={4}
-                      value={nodeData}
-                      autosize={{ minRows: 4, maxRows: 4 }}
-                      onChange={event => setNodeData(event.target.value)}
-                    />
-                    <Row align={"middle"} justify={"center"}>
-                      <Col>
-                        <div style={{ margin: 5, height: "4vh" }}>
-                          <Button type="primary" onClick={onSetData}>
-                            <IconFont type={"icon-paper-plane"} />
-                            保存
-                          </Button>
-                        </div>
-                      </Col>
-                    </Row>
-                  </Card>
-                </TabPane>
-                <TabPane
-                  tab={
-                    <span>
-                      <IconFont type={"icon-checklist"} />
-                      节点属性
-                    </span>
-                  }
-                  key="2"
-                >
-                  <Table
-                    rowKey={"name"}
-                    columns={columns}
-                    dataSource={nodeStat}
-                    size={"small"}
-                    pagination={false}
-                    scroll={{ y: "42.5vh" }}
-                  />
-                </TabPane>
-                <TabPane
-                  tab={
-                    <span>
-                      <IconFont type={"icon-lock"} />
-                      节点权限
-                    </span>
-                  }
-                  key="3"
-                >
-                  <Card className={style.tabsCard} bordered={false}>
-                    <Descriptions
-                      bordered
-                      size={"small"}
-                      layout={"horizontal"}
-                      column={1}
-                    >
-                      <Descriptions.Item label="Schema(权限模式)">
-                        {nodeACL.scheme}
-                      </Descriptions.Item>
-                      <Descriptions.Item label="ID(授权对象)">
-                        {nodeACL.id}
-                      </Descriptions.Item>
-                      <Descriptions.Item label="Permission(权限)">
-                        {nodeACL.permissions}
-                      </Descriptions.Item>
-                    </Descriptions>
-                  </Card>
-                </TabPane>
-              </Tabs>
-            </div>
-          </Card>
-          <Card
+      <Row className={style.header} type={"flex"} align={"middle"}>
+        <Col span={1}>
+          <img src={logo} width={30} height={30} style={{ marginLeft: 20 }} />
+        </Col>
+        <Col span={4}>
+          <span
             style={{
-              height: "40vh",
-              margin: 5,
-              backgroundColor: "#F5F5F5"
+              fontSize: 24,
+              color: "rgba(255,255,255,1)",
+              lineHeight: 22,
+              marginLeft: 10
             }}
-            hoverable
           >
-            <Row>
-              <Col span={23}>
-                <div
-                  ref={logDiv}
-                  style={{
-                    whiteSpace: "pre-wrap",
-                    overflow: "auto",
-                    height: "34vh",
-                    backgroundColor: "#FFF"
-                  }}
-                >
-                  {log}
-                </div>
-              </Col>
-              <Col span={1}>
-                <div style={{ height: "34vh" }}>
-                  <Tooltip title={"清空日志"}>
-                    <Button
-                      type="link"
-                      onClick={() => {
-                        logArr = [];
-                        setLog("");
-                      }}
-                    >
-                      <IconFont type={"icon-shuazi"} style={{ fontSize: 20 }} />
-                    </Button>
-                  </Tooltip>
-                </div>
-              </Col>
-            </Row>
-          </Card>
-        </div>
-      </SplitPane>
+            Visual-Zookeeper
+          </span>
+        </Col>
+        <Col
+          span={1}
+          offset={18}
+          style={{
+            "-webkit-app-region": "no-drag",
+            color: "rgba(255,255,255,1)"
+          }}
+        >
+          <Icon
+            type="minus"
+            style={{ fontSize: 22, marginRight: 5 }}
+            onClick={() => {
+              electron.remote.getCurrentWindow().minimize();
+            }}
+          />
+          <Icon
+            type="close"
+            style={{ fontSize: 22, marginRight: 5 }}
+            onClick={() => {
+              electron.remote.getCurrentWindow().close();
+            }}
+          />
+        </Col>
+      </Row>
+      <div style={{ background: "rgba(242,245,247,1)", padding: 15 }}>
+        <Row>
+          <Col span={10}>{leftCard}</Col>
+          <Col span={14}>
+            <div>
+              {rightCard}
+              {rightBottomCard}
+            </div>
+          </Col>
+        </Row>
+      </div>
       <CreateNodeForm
-        wrappedComponentRef={(ref: any) => setFormRef(ref)}
+        wrappedComponentRef={formRef}
         visible={createNodeVisible}
         parentNode={nodePath}
         onCancel={() => setCreateNodeVisible(false)}

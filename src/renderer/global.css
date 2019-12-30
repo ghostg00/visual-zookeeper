@@ -6,6 +6,7 @@ body,
 
 body {
   margin: 0;
+  -webkit-user-select: none;
 }
 
 ::-webkit-scrollbar {
