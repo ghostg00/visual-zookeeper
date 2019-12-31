@@ -72,7 +72,6 @@ function Home(props: HomeProps) {
   const [decodeURI, setDecodeURI] = useState(false);
 
   const logDiv = useRef<HTMLDivElement>(null);
-  const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     logEvent.on("log", (args: any) => {
@@ -157,7 +156,7 @@ function Home(props: HomeProps) {
             key={item.key}
             title={title}
             dataRef={item}
-            icon={<IconFont type="icon-folder" style={{ fontSize: 20 }} />}
+            // icon={<IconFont type="icon-folder" style={{ fontSize: 20 }} />}
           >
             {renderTreeNodes(item.children)}
           </TreeNode>
@@ -168,7 +167,7 @@ function Home(props: HomeProps) {
           key={item.key}
           title={title}
           dataRef={item}
-          icon={<IconFont type="icon-wenjian-" style={{ fontSize: 20 }} />}
+          // icon={<IconFont type="icon-wenjian-" style={{ fontSize: 20 }} />}
         />
       );
     });
@@ -350,7 +349,7 @@ function Home(props: HomeProps) {
       <Row type={"flex"} align={"middle"} justify={"space-between"}>
         <Col span={14}>
           <Input
-            style={{ marginBottom: 10, marginTop: 10 }}
+            style={{ marginBottom: 20, marginTop: 10 }}
             addonBefore="URL"
             placeholder="请输入zookeeper url"
             value={url}
@@ -358,7 +357,11 @@ function Home(props: HomeProps) {
           />
         </Col>
         <Col>
-          <Button type={"primary"} onClick={connect} style={{ marginRight: 5 }}>
+          <Button
+            type={"primary"}
+            onClick={connect}
+            style={{ marginRight: 5, marginBottom: 15 }}
+          >
             连接
           </Button>
           <Button type={"primary"} onClick={close}>
@@ -449,7 +452,8 @@ function Home(props: HomeProps) {
                 <Col>
                   <div
                     style={{
-                      margin: 5,
+                      marginTop: 10,
+                      marginBottom: 5,
                       height: "4vh"
                     }}
                   >
@@ -521,6 +525,7 @@ function Home(props: HomeProps) {
       }}
       title={<span className={style.cardTitle}>日志</span>}
       bordered={false}
+      headStyle={{ borderBottom: "none" }}
       extra={
         <Button
           type="link"
@@ -603,7 +608,6 @@ function Home(props: HomeProps) {
         </Row>
       </div>
       <CreateNodeForm
-        wrappedComponentRef={formRef}
         visible={createNodeVisible}
         parentNode={nodePath}
         onCancel={() => setCreateNodeVisible(false)}
