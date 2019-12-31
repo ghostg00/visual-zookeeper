@@ -2561,7 +2561,7 @@ antd@3.x:
 
 antd@^3.26.5:
   version "3.26.5"
-  resolved "http://148.70.121.147:8802/repository/npm-group/antd/-/antd-3.26.5.tgz#83e96a5c3f5fdf27bcf6daeffce78c2e88e9d555"
+  resolved "https://registry.npm.taobao.org/antd/download/antd-3.26.5.tgz?cache=0&sync_timestamp=1577632898560&other_urls=https%3A%2F%2Fregistry.npm.taobao.org%2Fantd%2Fdownload%2Fantd-3.26.5.tgz#83e96a5c3f5fdf27bcf6daeffce78c2e88e9d555"
   integrity sha1-g+lqXD9f3ye89trv/OeMLojp1VU=
   dependencies:
     "@ant-design/create-react-context" "^0.2.4"

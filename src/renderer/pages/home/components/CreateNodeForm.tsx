@@ -22,6 +22,16 @@ const CreateNodeForm: React.ComponentType<CreateNodeFormProps> = props => {
       onCreate(values);
     });
   };
+  const formItemLayout = {
+    labelCol: {
+      xs: { span: 24 },
+      sm: { span: 4 }
+    },
+    wrapperCol: {
+      xs: { span: 24 },
+      sm: { span: 20 }
+    }
+  };
   return (
     <Modal
       destroyOnClose
@@ -29,8 +39,10 @@ const CreateNodeForm: React.ComponentType<CreateNodeFormProps> = props => {
       visible={visible}
       onCancel={onCancel}
       onOk={onOk}
+      okText={"确定"}
+      cancelText={"取消"}
     >
-      <Form>
+      <Form {...formItemLayout}>
         <Item label="父节点">{parentNode}</Item>
         <Item label="节点名">
           {getFieldDecorator("zkNodeName", {
@@ -39,7 +51,10 @@ const CreateNodeForm: React.ComponentType<CreateNodeFormProps> = props => {
         </Item>
         <Item label="节点值">
           {getFieldDecorator("nodeData")(
-            <TextArea placeholder={"请输入节点值"} />
+            <TextArea
+              placeholder={"请输入节点值"}
+              autoSize={{ minRows: 4, maxRows: 4 }}
+            />
           )}
         </Item>
       </Form>

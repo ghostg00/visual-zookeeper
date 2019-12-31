@@ -322,9 +322,11 @@ function Home(props: HomeProps) {
     <Card
       style={{
         // overflow: "auto",
-        height: "91vh",
+        // height: "calc(100% - 78px)",
+        height: "100%",
         marginRight: 15
       }}
+      bodyStyle={{ height: "100%" }}
       bordered={false}
     >
       {/*<Row type={"flex"} align={"middle"} justify={"space-between"}>*/}
@@ -371,7 +373,9 @@ function Home(props: HomeProps) {
       </Row>
       <Card
         title={<span className={style.cardTitle}>zookeeper节点</span>}
+        style={{ height: "calc(100% - 62px)" }}
         size={"small"}
+        bodyStyle={{ height: "calc(100% - 38px)" }}
       >
         <Row type="flex" align="middle" justify="space-between">
           <Col>
@@ -396,7 +400,7 @@ function Home(props: HomeProps) {
             <Button
               type={"link"}
               icon={"delete"}
-              // style={{ color: "red" }}
+              style={{ color: treeData.length > 0 ? "red" : undefined }}
               disabled={!(treeData.length > 0)}
               onClick={onRemove}
             >
@@ -416,7 +420,7 @@ function Home(props: HomeProps) {
             allowClear
           />
         </Row>
-        <Row style={{ overflow: "auto", height: "67vh" }}>
+        <Row style={{ overflow: "auto", height: "calc(100% -74px)" }}>
           <Tree
             showIcon
             selectedKeys={selectedKeys}
@@ -433,51 +437,53 @@ function Home(props: HomeProps) {
   );
 
   const rightCard = (
-    <Card style={{ height: "58vh", marginBottom: 15 }} bordered={false}>
-      <div className="card-container">
-        <Tabs>
+    <Card
+      style={{ marginBottom: 15 }}
+      bordered={false}
+      bodyStyle={{ height: "100%" }}
+    >
+      <div className="card-container" style={{ height: "100%" }}>
+        <Tabs style={{ height: "100%" }}>
           <TabPane
             tab={<span className={style.cardTitle}>节点数据</span>}
             key="1"
+            style={{ height: 385 }}
           >
-            <Card className={style.tabsCard} bordered={false}>
-              <div style={{ height: "18vh", overflow: "auto" }}>
-                节点路径：{nodePath}
-                <br />
-                <br />
+            <div style={{ height: "200px", overflow: "auto" }}>
+              <p>节点路径：{nodePath}</p>
+              <p>
                 节点名：
                 {decodeURI ? decodeURIComponent(nodeName) : nodeName}
-              </div>
-              <Row align={"middle"} justify={"center"}>
-                <Col>
-                  <div
-                    style={{
-                      marginTop: 10,
-                      marginBottom: 5,
-                      height: "4vh"
-                    }}
-                  >
-                    URL解码：
-                    <Switch onChange={checked => setDecodeURI(checked)} />
-                  </div>
-                </Col>
-              </Row>
-              <TextArea
-                rows={6}
-                value={nodeData}
-                autosize={{ minRows: 6, maxRows: 6 }}
-                onChange={event => setNodeData(event.target.value)}
-              />
-              <Row align={"middle"} justify={"center"}>
-                <Col>
-                  <div style={{ marginTop: 20, height: "4vh" }}>
-                    <Button type="primary" onClick={onSetData}>
-                      保存
-                    </Button>
-                  </div>
-                </Col>
-              </Row>
-            </Card>
+              </p>
+            </div>
+            <Row align={"middle"} justify={"center"}>
+              <Col>
+                <div
+                  style={{
+                    // marginTop: 12,
+                    // marginBottom: 12,
+                    lineHeight: "48px"
+                  }}
+                >
+                  URL解码：
+                  <Switch onChange={checked => setDecodeURI(checked)} />
+                </div>
+              </Col>
+            </Row>
+            <TextArea
+              value={nodeData}
+              autoSize={{ minRows: 4, maxRows: 4 }}
+              onChange={event => setNodeData(event.target.value)}
+            />
+            <Row align={"middle"} justify={"center"}>
+              <Col>
+                <div style={{ marginTop: 12 }}>
+                  <Button type="primary" onClick={onSetData}>
+                    保存
+                  </Button>
+                </div>
+              </Col>
+            </Row>
           </TabPane>
           <TabPane
             tab={<span className={style.cardTitle}>节点属性</span>}
@@ -521,11 +527,12 @@ function Home(props: HomeProps) {
   const rightBottomCard = (
     <Card
       style={{
-        height: "31.5vh"
+        height: "calc(100% - 484px)"
       }}
       title={<span className={style.cardTitle}>日志</span>}
       bordered={false}
       headStyle={{ borderBottom: "none" }}
+      bodyStyle={{ height: "calc(100% - 64px)", paddingTop: 0 }}
       extra={
         <Button
           type="link"
@@ -545,8 +552,9 @@ function Home(props: HomeProps) {
         style={{
           whiteSpace: "pre-wrap",
           overflow: "auto",
-          height: "21vh",
-          border: "1px solid #E6E6E6"
+          height: "100%",
+          border: "1px solid #E6E6E6",
+          borderRadius: 2
         }}
       >
         {log}
@@ -557,13 +565,13 @@ function Home(props: HomeProps) {
   return (
     <>
       <Row className={style.header} type={"flex"} align={"middle"}>
-        <Col span={1}>
-          <img src={logo} width={30} height={30} style={{ marginLeft: 20 }} />
-        </Col>
-        <Col span={4}>
+        {/*<Col span={1} offset={9}>*/}
+        {/*  <img src={logo} width={30} height={30} style={{ marginLeft: 20 }} />*/}
+        {/*</Col>*/}
+        <Col span={4} offset={10}>
           <span
             style={{
-              fontSize: 24,
+              fontSize: 20,
               color: "rgba(255,255,255,1)",
               lineHeight: 22,
               marginLeft: 10
@@ -572,38 +580,44 @@ function Home(props: HomeProps) {
             Visual-Zookeeper
           </span>
         </Col>
-        <Col
-          span={1}
-          offset={18}
-          style={{
-            "-webkit-app-region": "no-drag",
-            color: "rgba(255,255,255,1)"
-          }}
-        >
-          <Icon
-            type="minus"
-            style={{ fontSize: 22, marginRight: 5 }}
-            onClick={() => {
-              electron.remote.getCurrentWindow().minimize();
-            }}
-          />
-          <Icon
-            type="close"
-            style={{ fontSize: 22, marginRight: 5 }}
-            onClick={() => {
-              electron.remote.getCurrentWindow().close();
-            }}
-          />
-        </Col>
+        {/*<Col*/}
+        {/*  span={1}*/}
+        {/*  offset={9}*/}
+        {/*  style={{*/}
+        {/*    "-webkit-app-region": "no-drag",*/}
+        {/*    color: "rgba(255,255,255,1)"*/}
+        {/*  }}*/}
+        {/*>*/}
+        {/*  <Icon*/}
+        {/*    type="minus"*/}
+        {/*    style={{ fontSize: 22, marginRight: 5 }}*/}
+        {/*    onClick={() => {*/}
+        {/*      electron.remote.getCurrentWindow().minimize();*/}
+        {/*    }}*/}
+        {/*  />*/}
+        {/*  <Icon*/}
+        {/*    type="close"*/}
+        {/*    style={{ fontSize: 22, marginRight: 5 }}*/}
+        {/*    onClick={() => {*/}
+        {/*      electron.remote.getCurrentWindow().close();*/}
+        {/*    }}*/}
+        {/*  />*/}
+        {/*</Col>*/}
       </Row>
-      <div style={{ background: "rgba(242,245,247,1)", padding: 15 }}>
-        <Row>
-          <Col span={10}>{leftCard}</Col>
-          <Col span={14}>
-            <div>
-              {rightCard}
-              {rightBottomCard}
-            </div>
+      <div
+        style={{
+          background: "rgba(242,245,247,1)",
+          height: "calc(100% - 48px)",
+          padding: 15
+        }}
+      >
+        <Row style={{ position: "unset", height: "100%" }}>
+          <Col span={10} style={{ height: "100%" }}>
+            {leftCard}
+          </Col>
+          <Col span={14} style={{ height: "100%" }}>
+            {rightCard}
+            {rightBottomCard}
           </Col>
         </Row>
       </div>

@@ -1,7 +1,7 @@
 @import "~antd/es/style/themes/default.less";
 
 .tabsCard {
-  height: 47vh;
+  height: 100%;
   word-break: break-word;
 }
 
@@ -25,4 +25,9 @@
   height: 48px;
   background-color: #1890ff;
   -webkit-app-region: drag;
+}
+:global {
+  .ant-card-body {
+    padding: 12px;
+  }
 }

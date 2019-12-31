@@ -7,8 +7,11 @@ let mainWindow: Electron.BrowserWindow | null;
 function createWindow() {
   mainWindow = new BrowserWindow({
     height: 900,
+    minHeight: 720,
     width: 1600,
+    minWidth: 1200,
     frame: false,
+    titleBarStyle: "hidden",
     webPreferences: {
       nodeIntegration: true, // 是否集成 Nodejs
       webSecurity: false
