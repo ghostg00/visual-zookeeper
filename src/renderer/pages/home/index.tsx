@@ -29,13 +29,13 @@ import { Row } from "antd/lib/grid";
 import CreateNodeForm from "@/pages/home/components/CreateNodeForm";
 import moment from "moment";
 import { useLocalStorageState } from "@umijs/hooks";
+import LogCard from "@/pages/home/components/LogCard";
 
 let electron = window.require("electron");
 
-const { TreeNode } = Tree;
+const { TreeNode, DirectoryTree } = Tree;
 const { TextArea } = Input;
 const { TabPane } = Tabs;
-const ButtonGroup = Button.Group;
 
 const IconFont = Icon.createFromIconfontCN({
   scriptUrl: "http://at.alicdn.com/t/font_1396433_j73yygrrl3r.js"
@@ -45,8 +45,6 @@ interface HomeProps {
   home: StateType;
   dispatch: Dispatch;
 }
-
-let logArr: string[] = [];
 
 function Home(props: HomeProps) {
   const { dispatch } = props;
@@ -68,23 +66,7 @@ function Home(props: HomeProps) {
   const [nodeStat, setNodeStat] = useState([]);
   const [nodeACL, setNodeACL] = useState<ZkACL>(new ZkACL("", "", ""));
   const [createNodeVisible, setCreateNodeVisible] = useState(false);
-  const [log, setLog] = useState("");
   const [decodeURI, setDecodeURI] = useState(false);
-
-  const logDiv = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    logEvent.on("log", (args: any) => {
-      logArr.length >= 50 && logArr.shift();
-      logArr.push(
-        `${moment().format("YYYY-MM-DD HH:mm:ss SSS")}:   ${args.toString()}`
-      );
-      setLog(logArr.join("\n"));
-      if (logDiv.current != null) {
-        logDiv.current.scrollTop = logDiv.current.scrollHeight;
-      }
-    });
-  }, []);
 
   const connect = () => {
     dispatch({
@@ -156,6 +138,7 @@ function Home(props: HomeProps) {
             key={item.key}
             title={title}
             dataRef={item}
+            // icon={<Icon type="folder" />}
             // icon={<IconFont type="icon-folder" style={{ fontSize: 20 }} />}
           >
             {renderTreeNodes(item.children)}
@@ -295,7 +278,7 @@ function Home(props: HomeProps) {
     }
   };
 
-  const columns: ColumnProps<{}>[] = [
+  const columns: ColumnProps<any>[] = [
     {
       title: "名称",
       dataIndex: "name",
@@ -321,8 +304,6 @@ function Home(props: HomeProps) {
   const leftCard = (
     <Card
       style={{
-        // overflow: "auto",
-        // height: "calc(100% - 78px)",
         height: "100%",
         marginRight: 15
       }}
@@ -421,8 +402,9 @@ function Home(props: HomeProps) {
           />
         </Row>
         <Row style={{ overflow: "auto", height: "calc(100% -74px)" }}>
-          <Tree
+          <DirectoryTree
             showIcon
+            // multiple
             selectedKeys={selectedKeys}
             onSelect={onSelectTree}
             onExpand={onExpand}
@@ -430,7 +412,7 @@ function Home(props: HomeProps) {
             autoExpandParent={autoExpandParent}
           >
             {renderTreeNodes(treeData)}
-          </Tree>
+          </DirectoryTree>
         </Row>
       </Card>
     </Card>
@@ -447,24 +429,23 @@ function Home(props: HomeProps) {
           <TabPane
             tab={<span className={style.cardTitle}>节点数据</span>}
             key="1"
-            style={{ height: 385 }}
+            style={{ height: 457 }}
           >
-            <div style={{ height: "200px", overflow: "auto" }}>
+            <div
+              style={{
+                height: 270,
+                overflow: "auto",
+                WebkitUserSelect: "text"
+              }}
+            >
               <p>节点路径：{nodePath}</p>
               <p>
-                节点名：
-                {decodeURI ? decodeURIComponent(nodeName) : nodeName}
+                节点名称：{decodeURI ? decodeURIComponent(nodeName) : nodeName}
               </p>
             </div>
             <Row align={"middle"} justify={"center"}>
               <Col>
-                <div
-                  style={{
-                    // marginTop: 12,
-                    // marginBottom: 12,
-                    lineHeight: "48px"
-                  }}
-                >
+                <div style={{ lineHeight: "48px" }}>
                   URL解码：
                   <Switch onChange={checked => setDecodeURI(checked)} />
                 </div>
@@ -495,7 +476,7 @@ function Home(props: HomeProps) {
               columns={columns}
               dataSource={nodeStat}
               pagination={false}
-              scroll={{ y: "42.5vh" }}
+              style={{ WebkitUserSelect: "text" }}
             />
           </TabPane>
           <TabPane
@@ -520,44 +501,6 @@ function Home(props: HomeProps) {
             </Descriptions>
           </TabPane>
         </Tabs>
-      </div>
-    </Card>
-  );
-
-  const rightBottomCard = (
-    <Card
-      style={{
-        height: "calc(100% - 484px)"
-      }}
-      title={<span className={style.cardTitle}>日志</span>}
-      bordered={false}
-      headStyle={{ borderBottom: "none" }}
-      bodyStyle={{ height: "calc(100% - 64px)", paddingTop: 0 }}
-      extra={
-        <Button
-          type="link"
-          icon={"delete"}
-          style={{ color: "red" }}
-          onClick={() => {
-            logArr = [];
-            setLog("");
-          }}
-        >
-          清空日志
-        </Button>
-      }
-    >
-      <div
-        ref={logDiv}
-        style={{
-          whiteSpace: "pre-wrap",
-          overflow: "auto",
-          height: "100%",
-          border: "1px solid #E6E6E6",
-          borderRadius: 2
-        }}
-      >
-        {log}
       </div>
     </Card>
   );
@@ -617,7 +560,7 @@ function Home(props: HomeProps) {
           </Col>
           <Col span={14} style={{ height: "100%" }}>
             {rightCard}
-            {rightBottomCard}
+            <LogCard />
           </Col>
         </Row>
       </div>

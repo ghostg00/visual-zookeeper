@@ -22,7 +22,8 @@
       "package.json"
     ],
     "mac": {
-      "category": "your.app.category.type"
+      "category": "ghostg00",
+      "icon": "logo.png"
     },
     "directories": {
       "output": "release"
@@ -30,10 +31,11 @@
     "appId": "com.ghostg00.visual-zookeeper",
     "asar": false,
     "win": {
-      "icon": "favicon.ico"
+      "icon": "logo.png"
     }
   },
   "dependencies": {
+    "@umijs/hooks": "^1.5.1",
     "antd": "^3.26.5",
     "dva": "^2.4.1",
     "moment": "^2.24.0",
@@ -41,8 +43,7 @@
     "node-zookeeper-client": "^1.1.0",
     "react": "^16.9.0",
     "react-dom": "^16.9.0",
-    "react-split-pane": "^0.1.87",
-    "@umijs/hooks": "^1.5.1"
+    "react-split-pane": "^0.1.87"
   },
   "devDependencies": {
     "@types/nedb": "^1.8.9",

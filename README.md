@@ -2,17 +2,26 @@
 
 基于 [electron](https://electronjs.org)+[react](https://reactjs.org/) 构建的一个 [zookeeper](http://zookeeper.apache.org) 可视化客户端
 
-![图片](https://raw.githubusercontent.com/ghostg00/visual-zookeeper/master/docs/images/visual-zookeeper.png)
+页面如下：
+
+![图片](https://raw.githubusercontent.com/ghostg00/visual-zookeeper/master/docs/images/visual-zookeeper1.png)
+
+![图片](https://raw.githubusercontent.com/ghostg00/visual-zookeeper/master/docs/images/visual-zookeeper2.png)
 
 ---
 
-<!-- ## TODO -->
-<!-- - 优化页面风格 -->
+下一个开源软件筹备中...
+
+
+## TODO
+- 🌟 ~~优化页面风格(已完成)~~
+- 🌟 多选删除节点
+- 🌟 其他功能...
 
 ## 鸣谢
-- 感谢[Sky Lee](https://github.com/skyued)做的视觉优化(待发布)
-- 感谢[caiyunweiyang](https://github.com/caiyunweiyang)做的测试
-- 再次感谢帮助我的小伙伴们！
+- 🔥 感谢[Sky Lee](https://github.com/skyued)做的视觉优化
+- 🔥 感谢[caiyunweiyang](https://github.com/caiyunweiyang)做的测试
+- 🔥 再次感谢帮助我的小伙伴们！
 
 ## 依赖
 

@@ -15,13 +15,17 @@ function createWindow() {
     webPreferences: {
       nodeIntegration: true, // 是否集成 Nodejs
       webSecurity: false
-    }
+    },
+    // icon: path.join(__dirname, './logo.png')
   });
 
   if (process.env.NODE_ENV === "development") {
     mainWindow.loadURL("http://localhost:6008/#/");
     mainWindow.webContents.openDevTools();
   } else {
+    // if (process.platform === "darwin") {
+    //   app.dock.setIcon(path.join(__dirname, "./logo.png"));
+    // }
     mainWindow.loadURL(
       url.format({
         pathname: path.join(__dirname, "./dist/renderer/index.html"),
