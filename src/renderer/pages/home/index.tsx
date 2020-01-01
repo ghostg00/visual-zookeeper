@@ -150,6 +150,7 @@ function Home(props: HomeProps) {
           key={item.key}
           title={title}
           dataRef={item}
+          isLeaf
           // icon={<IconFont type="icon-wenjian-" style={{ fontSize: 20 }} />}
         />
       );
@@ -402,8 +403,9 @@ function Home(props: HomeProps) {
           />
         </Row>
         <Row style={{ overflow: "auto", height: "calc(100% -74px)" }}>
-          <DirectoryTree
-            showIcon
+          <Tree
+            blockNode
+            // showIcon
             // multiple
             selectedKeys={selectedKeys}
             onSelect={onSelectTree}
@@ -412,7 +414,7 @@ function Home(props: HomeProps) {
             autoExpandParent={autoExpandParent}
           >
             {renderTreeNodes(treeData)}
-          </DirectoryTree>
+          </Tree>
         </Row>
       </Card>
     </Card>
