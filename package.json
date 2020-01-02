@@ -37,6 +37,7 @@
   "dependencies": {
     "@umijs/hooks": "^1.5.1",
     "antd": "^3.26.5",
+    "current-device": "^0.10.0",
     "dva": "^2.4.1",
     "moment": "^2.24.0",
     "nedb": "^1.8.0",

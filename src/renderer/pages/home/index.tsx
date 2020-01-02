@@ -1,9 +1,8 @@
-import React, { ChangeEventHandler, useEffect, useRef, useState } from "react";
+import React, { ChangeEventHandler, useEffect, useState } from "react";
 import { connect } from "dva";
 import {
   Button,
   Card,
-  Col,
   Descriptions,
   Icon,
   Input,
@@ -21,24 +20,26 @@ import { TreeNodeNormal } from "antd/es/tree/Tree";
 import { ZkACL } from "@/utils/ZkClient";
 import logEvent from "../../utils/LogEvent";
 import { Event } from "node-zookeeper-client";
+// @ts-ignore
+import device from "current-device";
 
 import style from "./style.less";
-import logo from "../../assets/logo.png";
 import { ColumnProps } from "antd/lib/table";
-import { Row } from "antd/lib/grid";
+import { Col, Row } from "antd/lib/grid";
 import CreateNodeForm from "@/pages/home/components/CreateNodeForm";
-import moment from "moment";
 import { useLocalStorageState } from "@umijs/hooks";
 import LogCard from "@/pages/home/components/LogCard";
 
-let electron = window.require("electron");
+import * as Electron from "electron";
+
+let electron = window.require("electron") as Electron.AllElectron;
 
 const { TreeNode, DirectoryTree } = Tree;
 const { TextArea } = Input;
 const { TabPane } = Tabs;
 
 const IconFont = Icon.createFromIconfontCN({
-  scriptUrl: "http://at.alicdn.com/t/font_1396433_j73yygrrl3r.js"
+  scriptUrl: "//at.alicdn.com/t/font_1396433_v6gjtuz5n.js"
 });
 
 interface HomeProps {
@@ -67,6 +68,10 @@ function Home(props: HomeProps) {
   const [nodeACL, setNodeACL] = useState<ZkACL>(new ZkACL("", "", ""));
   const [createNodeVisible, setCreateNodeVisible] = useState(false);
   const [decodeURI, setDecodeURI] = useState(false);
+
+  useEffect(() => {
+    console.log("21");
+  });
 
   const connect = () => {
     dispatch({
@@ -333,7 +338,7 @@ function Home(props: HomeProps) {
       <Row type={"flex"} align={"middle"} justify={"space-between"}>
         <Col span={14}>
           <Input
-            style={{ marginBottom: 20, marginTop: 10 }}
+            style={{ marginBottom: 20 }}
             addonBefore="URL"
             placeholder="请输入zookeeper url"
             value={url}
@@ -344,7 +349,7 @@ function Home(props: HomeProps) {
           <Button
             type={"primary"}
             onClick={connect}
-            style={{ marginRight: 5, marginBottom: 15 }}
+            style={{ marginRight: 5, marginBottom: 20 }}
           >
             连接
           </Button>
@@ -355,7 +360,7 @@ function Home(props: HomeProps) {
       </Row>
       <Card
         title={<span className={style.cardTitle}>zookeeper节点</span>}
-        style={{ height: "calc(100% - 62px)" }}
+        style={{ height: "calc(100% - 52px)" }}
         size={"small"}
         bodyStyle={{ height: "calc(100% - 38px)" }}
       >
@@ -369,6 +374,7 @@ function Home(props: HomeProps) {
               type={"link"}
               icon={"plus"}
               disabled={!(treeData.length > 0)}
+              style={{ padding: "0 5px" }}
               onClick={() => {
                 if (!nodePath) {
                   message.warn("请选择节点");
@@ -382,13 +388,21 @@ function Home(props: HomeProps) {
             <Button
               type={"link"}
               icon={"delete"}
-              style={{ color: treeData.length > 0 ? "red" : undefined }}
+              style={{
+                color: treeData.length > 0 ? "red" : undefined,
+                padding: "0 5px"
+              }}
               disabled={!(treeData.length > 0)}
               onClick={onRemove}
             >
               删除
             </Button>
-            <Button type={"link"} icon={"reload"} onClick={refreshRootTreeNode}>
+            <Button
+              type={"link"}
+              icon={"reload"}
+              style={{ padding: "0 5px" }}
+              onClick={refreshRootTreeNode}
+            >
               刷新
             </Button>
           </Col>
@@ -507,12 +521,61 @@ function Home(props: HomeProps) {
     </Card>
   );
 
+  const renderWindowsHeaderOperate = () => {
+    if (device.windows()) {
+      const currentWindow = electron.remote.getCurrentWindow();
+      // currentWindow.setMaximizable(false);
+      return (
+        <Col
+          style={{
+            WebkitAppRegion: "no-drag",
+            color: "rgba(255,255,255,1)"
+          }}
+        >
+          <Icon
+            type="minus"
+            style={{ fontSize: 22, marginRight: 8 }}
+            onClick={() => currentWindow.minimize()}
+          />
+          {/*{isMaximized ? (*/}
+          {/*  <IconFont*/}
+          {/*    type={"icon-huanyuan"}*/}
+          {/*    style={{ fontSize: 22, marginRight: 8 }}*/}
+          {/*    onClick={() => {*/}
+          {/*      currentWindow.unmaximize();*/}
+          {/*      setIsMaximized(currentWindow.isMaximized());*/}
+          {/*    }}*/}
+          {/*  />*/}
+          {/*) : (*/}
+          {/*  <Icon*/}
+          {/*    type="border"*/}
+          {/*    style={{ fontSize: 22, marginRight: 8 }}*/}
+          {/*    onClick={() => {*/}
+          {/*      currentWindow.maximize();*/}
+          {/*      setIsMaximized(true);*/}
+          {/*    }}*/}
+          {/*  />*/}
+          {/*)}*/}
+          <Icon
+            type="close"
+            style={{ fontSize: 22, marginRight: 8 }}
+            onClick={() => {
+              currentWindow.close();
+            }}
+          />
+        </Col>
+      );
+    }
+  };
+
   return (
     <>
-      <Row className={style.header} type={"flex"} align={"middle"}>
-        {/*<Col span={1} offset={9}>*/}
-        {/*  <img src={logo} width={30} height={30} style={{ marginLeft: 20 }} />*/}
-        {/*</Col>*/}
+      <Row
+        className={style.header}
+        type={"flex"}
+        align={"middle"}
+        justify={"space-between"}
+      >
         <Col span={4} offset={10}>
           <span
             style={{
@@ -525,29 +588,7 @@ function Home(props: HomeProps) {
             Visual-Zookeeper
           </span>
         </Col>
-        {/*<Col*/}
-        {/*  span={1}*/}
-        {/*  offset={9}*/}
-        {/*  style={{*/}
-        {/*    "-webkit-app-region": "no-drag",*/}
-        {/*    color: "rgba(255,255,255,1)"*/}
-        {/*  }}*/}
-        {/*>*/}
-        {/*  <Icon*/}
-        {/*    type="minus"*/}
-        {/*    style={{ fontSize: 22, marginRight: 5 }}*/}
-        {/*    onClick={() => {*/}
-        {/*      electron.remote.getCurrentWindow().minimize();*/}
-        {/*    }}*/}
-        {/*  />*/}
-        {/*  <Icon*/}
-        {/*    type="close"*/}
-        {/*    style={{ fontSize: 22, marginRight: 5 }}*/}
-        {/*    onClick={() => {*/}
-        {/*      electron.remote.getCurrentWindow().close();*/}
-        {/*    }}*/}
-        {/*  />*/}
-        {/*</Col>*/}
+        {renderWindowsHeaderOperate()}
       </Row>
       <div
         style={{
