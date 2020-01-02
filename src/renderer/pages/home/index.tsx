@@ -8,12 +8,12 @@ import {
   Input,
   message,
   Modal,
+  Spin,
   Switch,
   Table,
   Tabs,
   Tree
 } from "antd";
-import { Dispatch } from "redux";
 import { StateType } from "@/pages/home/model";
 import { TreeProps } from "antd/es/tree";
 import { TreeNodeNormal } from "antd/es/tree/Tree";
@@ -31,6 +31,7 @@ import { useLocalStorageState } from "@umijs/hooks";
 import LogCard from "@/pages/home/components/LogCard";
 
 import * as Electron from "electron";
+import { Dispatch } from "@/declare/dva";
 
 let electron = window.require("electron") as Electron.AllElectron;
 
@@ -54,6 +55,7 @@ function Home(props: HomeProps) {
   const [splitPos, setSplitPos] = useLocalStorageState("splitPos", 600);
   const [isAuto, setIsAuto] = useLocalStorageState("isAuto", false);
 
+  const [treeLoading, setTreeLoading] = useState(false);
   const [treeData, setTreeData] = useState<TreeNodeNormal[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
@@ -69,52 +71,48 @@ function Home(props: HomeProps) {
   const [createNodeVisible, setCreateNodeVisible] = useState(false);
   const [decodeURI, setDecodeURI] = useState(false);
 
-  useEffect(() => {
-    console.log("21");
-  });
+  useEffect(() => refreshRootTreeNode(), [isAuto]);
+  useEffect(() => setTreeLoading(false), [treeData]);
 
   const connect = () => {
     dispatch({
       type: "home/connect",
-      payload: { url },
-      callback() {
-        refreshRootTreeNode();
-        setNodePath("/");
-        message.success("连接成功");
-      }
+      payload: { url }
+    }).then(() => {
+      refreshRootTreeNode();
+      setNodePath("/");
+      message.success("连接成功");
     });
   };
   const event: any = (event: Event) => {
     logEvent.emit("log", event);
-    refreshRootTreeNode();
+    isAuto && refreshRootTreeNode();
   };
 
   const refreshRootTreeNode = () => {
+    setTreeLoading(true);
     dispatch({
       type: "home/getChildrenTree",
       payload: { rootNode },
-      callback(data: TreeNodeNormal[]) {
-        setTreeData(data);
-        message.success("刷新成功");
-      },
       event: isAuto ? event : undefined
+    }).then((data: TreeNodeNormal[]) => {
+      setTreeData(data);
     });
   };
 
   const close = async () => {
     return new Promise(resolve => {
       dispatch({
-        type: "home/close",
-        callback() {
-          setExpandedKeys([]);
-          setTreeData([]);
-          setNodePath("");
-          setNodeName("");
-          setNodeData("");
-          setNodeACL(new ZkACL("", "", ""));
-          message.success("断开连接成功");
-          resolve();
-        }
+        type: "home/close"
+      }).then(() => {
+        setExpandedKeys([]);
+        setTreeData([]);
+        setNodePath("");
+        setNodeName("");
+        setNodeData("");
+        setNodeACL(new ZkACL("", "", ""));
+        message.success("断开连接成功");
+        resolve();
       });
     });
   };
@@ -222,30 +220,23 @@ function Home(props: HomeProps) {
       setNodePath(path);
       dispatch({
         type: "home/getData",
-        payload: { path },
-        callback(data: [string, []]) {
-          setNodeData(data[0]);
-          setNodeStat(data[1]);
-        }
+        payload: { path }
+      }).then((data: [string, []]) => {
+        setNodeData(data[0]);
+        setNodeStat(data[1]);
       });
       dispatch({
         type: "home/getACL",
-        payload: { path },
-        callback(nodeACL: ZkACL) {
-          setNodeACL(nodeACL);
-        }
-      });
+        payload: { path }
+      }).then((nodeACL: ZkACL) => setNodeACL(nodeACL));
     }
   };
 
   const onSetData = () => {
     dispatch({
       type: "home/setData",
-      payload: { path: nodePath, data: nodeData },
-      callback() {
-        message.success(`${nodePath}节点值更新成功`);
-      }
-    });
+      payload: { path: nodePath, data: nodeData }
+    }).then(() => message.success(`${nodePath}节点值更新成功`));
   };
 
   const onCreate = (values: any) => {
@@ -255,10 +246,9 @@ function Home(props: HomeProps) {
       payload: {
         path,
         nodeData: values.nodeData
-      },
-      callback() {
-        message.success(`${path}节点新增成功`);
       }
+    }).then(() => {
+      message.success(`${path}节点新增成功`);
     });
     setCreateNodeVisible(false);
   };
@@ -272,11 +262,10 @@ function Home(props: HomeProps) {
           return new Promise(resolve => {
             dispatch({
               type: "home/remove",
-              payload: { path: nodePath },
-              callback() {
-                message.success(`${nodePath}节点值删除成功`);
-                resolve();
-              }
+              payload: { path: nodePath }
+            }).then(() => {
+              message.success(`${nodePath}节点值删除成功`);
+              resolve();
             });
           });
         }
@@ -367,7 +356,13 @@ function Home(props: HomeProps) {
         <Row type="flex" align="middle" justify="space-between">
           <Col>
             节点是否自动更新&nbsp;&nbsp;
-            <Switch checked={isAuto} onChange={checked => setIsAuto(checked)} />
+            <Switch
+              checked={isAuto}
+              onChange={checked => {
+                setIsAuto(checked);
+                // refreshRootTreeNode();
+              }}
+            />
           </Col>
           <Col>
             <Button
@@ -416,19 +411,21 @@ function Home(props: HomeProps) {
             allowClear
           />
         </Row>
-        <Row style={{ overflow: "auto", height: "calc(100% -74px)" }}>
-          <Tree
-            blockNode
-            // showIcon
-            // multiple
-            selectedKeys={selectedKeys}
-            onSelect={onSelectTree}
-            onExpand={onExpand}
-            expandedKeys={expandedKeys}
-            autoExpandParent={autoExpandParent}
-          >
-            {renderTreeNodes(treeData)}
-          </Tree>
+        <Row style={{ overflow: "auto", height: "calc(100% - 74px)" }}>
+          <Spin spinning={treeLoading}>
+            <Tree
+              blockNode
+              // showIcon
+              // multiple
+              selectedKeys={selectedKeys}
+              onSelect={onSelectTree}
+              onExpand={onExpand}
+              expandedKeys={expandedKeys}
+              autoExpandParent={autoExpandParent}
+            >
+              {renderTreeNodes(treeData)}
+            </Tree>
+          </Spin>
         </Row>
       </Card>
     </Card>
@@ -450,11 +447,14 @@ function Home(props: HomeProps) {
             <div
               style={{
                 height: 270,
+                wordBreak: "break-word",
                 overflow: "auto",
                 WebkitUserSelect: "text"
               }}
             >
-              <p>节点路径：{nodePath}</p>
+              <p>
+                节点路径：{nodePath.substring(0, nodePath.lastIndexOf("/"))}
+              </p>
               <p>
                 节点名称：{decodeURI ? decodeURIComponent(nodeName) : nodeName}
               </p>
@@ -524,7 +524,6 @@ function Home(props: HomeProps) {
   const renderWindowsHeaderOperate = () => {
     if (device.windows()) {
       const currentWindow = electron.remote.getCurrentWindow();
-      // currentWindow.setMaximizable(false);
       return (
         <Col
           style={{
@@ -537,31 +536,10 @@ function Home(props: HomeProps) {
             style={{ fontSize: 22, marginRight: 8 }}
             onClick={() => currentWindow.minimize()}
           />
-          {/*{isMaximized ? (*/}
-          {/*  <IconFont*/}
-          {/*    type={"icon-huanyuan"}*/}
-          {/*    style={{ fontSize: 22, marginRight: 8 }}*/}
-          {/*    onClick={() => {*/}
-          {/*      currentWindow.unmaximize();*/}
-          {/*      setIsMaximized(currentWindow.isMaximized());*/}
-          {/*    }}*/}
-          {/*  />*/}
-          {/*) : (*/}
-          {/*  <Icon*/}
-          {/*    type="border"*/}
-          {/*    style={{ fontSize: 22, marginRight: 8 }}*/}
-          {/*    onClick={() => {*/}
-          {/*      currentWindow.maximize();*/}
-          {/*      setIsMaximized(true);*/}
-          {/*    }}*/}
-          {/*  />*/}
-          {/*)}*/}
           <Icon
             type="close"
             style={{ fontSize: 22, marginRight: 8 }}
-            onClick={() => {
-              currentWindow.close();
-            }}
+            onClick={() => currentWindow.close()}
           />
         </Col>
       );
@@ -617,8 +595,6 @@ function Home(props: HomeProps) {
   );
 }
 
-const mapStateToProps = ({ home }: { home: StateType }) => ({
+export default connect(({ home }: { home: StateType }) => ({
   home
-});
-
-export default connect(mapStateToProps)(Home);
+}))(Home);

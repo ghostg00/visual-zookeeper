@@ -10,9 +10,11 @@ const nodeZookeeperClient = window.require("node-zookeeper-client");
 
 class ZkClient {
   client: Client | any;
+  url: string | any;
 
   async connect(url: string) {
     if (this.client) return;
+    this.url = url;
     const promise = new Promise<Client>(resolve => {
       let client = nodeZookeeperClient.createClient(url) as Client;
       let connected = false;
@@ -44,9 +46,7 @@ class ZkClient {
   async getChildren(path: string, watcher: (event: Event) => void) {
     return new Promise(resolve => {
       if (watcher) {
-        console.log(watcher);
         this.client.getChildren(path, watcher, (error: any, children: any) => {
-          console.log(children);
           resolve(children);
         });
       } else {
@@ -57,12 +57,15 @@ class ZkClient {
     });
   }
   async getChildrenTree(rootNode: string, watcher: (event: Event) => void) {
+    if (!watcher) {
+      await this.close();
+      await this.connect(this.url);
+    }
     return new Promise(resolve => {
       if (!this.client) return [];
       this.client.listSubTreeBFS(
         rootNode.startsWith("/") ? rootNode : "/" + rootNode,
         (error: any, children: string[]) => {
-          console.log(children);
           if (!children) {
             return [];
           }
@@ -90,12 +93,14 @@ class ZkClient {
             root && trees.push(node1);
           }
           resolve(trees);
-          for (const child of children) {
-            this.client.getChildren(
-              child,
-              watcher,
-              (error: Error | Exception, children: string[], stat: Stat) => {}
-            );
+          if (watcher) {
+            for (const child of children) {
+              this.client.getChildren(
+                child,
+                watcher,
+                (error: Error | Exception, children: string[], stat: Stat) => {}
+              );
+            }
           }
         }
       );

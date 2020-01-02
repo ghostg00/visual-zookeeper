@@ -1,7 +1,7 @@
 {
   "name": "visual-zookeeper",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "main": "./dist/main/main.js",
   "scripts": {
     "start": "concurrently.cmd \"yarn start:main\" \"yarn start:renderer\"",
@@ -38,7 +38,7 @@
     "@umijs/hooks": "^1.5.1",
     "antd": "^3.26.5",
     "current-device": "^0.10.0",
-    "dva": "^2.4.1",
+    "dva": "^2.6.0-beta.20",
     "moment": "^2.24.0",
     "nedb": "^1.8.0",
     "node-zookeeper-client": "^1.1.0",

@@ -1,4 +1,4 @@
-import { AnyAction, Reducer } from "redux";
+import { Action, AnyAction, Reducer } from 'redux';
 import { EffectsCommandMap, Model } from "dva";
 
 declare type Effect<S> = (
@@ -16,4 +16,8 @@ declare interface ModelType<S> extends Model {
   reducers?: {
     [key: string]: Reducer<S>;
   };
+}
+
+declare interface Dispatch<A extends Action = AnyAction> {
+  <T extends A>(action: T): Promise<any>;
 }

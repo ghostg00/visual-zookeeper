@@ -16,13 +16,12 @@ const model: ModelType<StateType> = {
   state: {},
 
   effects: {
-    *connect({ payload, callback }, { call, put }) {
+    *connect({ payload }, { call, put }) {
       const data = yield call([zkClient, zkClient.connect], payload.url);
-      data && callback && callback(data);
+      if (data) return data;
     },
-    *close({ payload, callback }, { call, put }) {
-      const data = yield call([zkClient, zkClient.close]);
-      callback && callback(data);
+    *close({ payload }, { call, put }) {
+      return yield call([zkClient, zkClient.close]);
     },
     *getChildren({ payload, callback, event }, { call, put }) {
       const data = yield call(
@@ -32,27 +31,24 @@ const model: ModelType<StateType> = {
       );
       callback && callback(data);
     },
-    *getChildrenTree({ payload, callback, event }, { call, put }) {
-      const data = yield call(
+    *getChildrenTree({ payload, event }, { call, put }) {
+      return yield call(
         [zkClient, zkClient.getChildrenTree],
         payload.rootNode,
         event
       );
-      callback && callback(data);
     },
-    *create({ payload, callback }, { call, put }) {
-      const data = yield call(
+    *create({ payload }, { call, put }) {
+      return yield call(
         [zkClient, zkClient.create],
         payload.path,
         payload.nodeData
       );
-      callback && callback(data);
     },
-    *remove({ payload, callback }, { call, put }) {
-      const data = yield call([zkClient, zkClient.remove], payload.path);
-      callback && callback(data);
+    *remove({ payload }, { call, put }) {
+      return yield call([zkClient, zkClient.remove], payload.path);
     },
-    *getData({ payload, callback }, { call, put }) {
+    *getData({ payload }, { call, put }) {
       const data = yield call(
         [zkClient, zkClient.getData],
         payload.path,
@@ -62,15 +58,17 @@ const model: ModelType<StateType> = {
         type: "getDataReducer",
         payload: data
       });
-      callback && callback(data);
+      return data;
     },
-    *setData({ payload, callback }, { call, put }) {
-      yield call([zkClient, zkClient.setData], payload.path, payload.data);
-      callback && callback();
+    *setData({ payload }, { call, put }) {
+      return yield call(
+        [zkClient, zkClient.setData],
+        payload.path,
+        payload.data
+      );
     },
-    *getACL({ payload, callback }, { call, put }) {
-      const data = yield call([zkClient, zkClient.getACL], payload.path);
-      callback && callback(data);
+    *getACL({ payload }, { call, put }) {
+      return yield call([zkClient, zkClient.getACL], payload.path);
     }
   },
   reducers: {}
