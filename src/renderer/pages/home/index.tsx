@@ -20,20 +20,15 @@ import { TreeNodeNormal } from "antd/es/tree/Tree";
 import { ZkACL } from "@/utils/ZkClient";
 import logEvent from "../../utils/LogEvent";
 import { Event } from "node-zookeeper-client";
-// @ts-ignore
-import device from "current-device";
-
 import style from "./style.less";
 import { ColumnProps } from "antd/lib/table";
 import { Col, Row } from "antd/lib/grid";
 import CreateNodeForm from "@/pages/home/components/CreateNodeForm";
 import { useLocalStorageState } from "@umijs/hooks";
 import LogCard from "@/pages/home/components/LogCard";
-
-import * as Electron from "electron";
 import { Dispatch } from "@/declare/dva";
-
-let electron = window.require("electron") as Electron.AllElectron;
+import Header from "@/pages/home/components/Header";
+// @ts-ignore
 
 const { TreeNode, DirectoryTree } = Tree;
 const { TextArea } = Input;
@@ -521,53 +516,9 @@ function Home(props: HomeProps) {
     </Card>
   );
 
-  const renderWindowsHeaderOperate = () => {
-    if (device.windows()) {
-      const currentWindow = electron.remote.getCurrentWindow();
-      return (
-        <Col
-          style={{
-            WebkitAppRegion: "no-drag",
-            color: "rgba(255,255,255,1)"
-          }}
-        >
-          <Icon
-            type="minus"
-            style={{ fontSize: 22, marginRight: 8 }}
-            onClick={() => currentWindow.minimize()}
-          />
-          <Icon
-            type="close"
-            style={{ fontSize: 22, marginRight: 8 }}
-            onClick={() => currentWindow.close()}
-          />
-        </Col>
-      );
-    }
-  };
-
   return (
     <>
-      <Row
-        className={style.header}
-        type={"flex"}
-        align={"middle"}
-        justify={"space-between"}
-      >
-        <Col span={4} offset={10}>
-          <span
-            style={{
-              fontSize: 20,
-              color: "rgba(255,255,255,1)",
-              lineHeight: 22,
-              marginLeft: 10
-            }}
-          >
-            Visual-Zookeeper
-          </span>
-        </Col>
-        {renderWindowsHeaderOperate()}
-      </Row>
+      <Header />
       <div
         style={{
           background: "rgba(242,245,247,1)",
