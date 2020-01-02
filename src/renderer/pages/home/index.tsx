@@ -144,7 +144,7 @@ function Home(props: HomeProps) {
             // icon={<Icon type="folder" />}
             // icon={<IconFont type="icon-folder" style={{ fontSize: 20 }} />}
           >
-            {renderTreeNodes(item.children)}
+            {renderTreeNodes(item.children!)}
           </TreeNode>
         );
       }
