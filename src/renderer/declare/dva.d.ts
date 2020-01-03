@@ -1,12 +1,11 @@
-import { Action, AnyAction, Reducer } from 'redux';
+import { Action, AnyAction, Reducer } from "redux";
 import { EffectsCommandMap, Model } from "dva";
 
 declare type Effect<S> = (
-  action: AnyAction,
+  action: AnyAction & { payload: any },
   effects: EffectsCommandMap & { select: <T>(func: (state: S) => T) => T }
-) => void;
+) => any;
 
-// @ts-ignore
 declare interface ModelType<S> extends Model {
   namespace: string;
   state?: S;

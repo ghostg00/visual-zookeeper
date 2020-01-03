@@ -3,6 +3,7 @@ import { MomentInput } from "moment";
 import logEvent from "./LogEvent";
 import { TreeNodeNormal } from "antd/es/tree/Tree";
 import { message } from "antd";
+import e from "zookeeper-cluster-client";
 
 const moment = require("moment");
 const { Buffer } = window.require("buffer");
@@ -56,6 +57,7 @@ class ZkClient {
       }
     });
   }
+
   async getChildrenTree(rootNode: string, watcher: (event: Event) => void) {
     if (!watcher) {
       await this.close();
@@ -107,17 +109,20 @@ class ZkClient {
     });
   }
 
-  async remove(path: string) {
+  async remove(path: string[]) {
+    const removePath = [...path];
     return new Promise(resolve => {
-      if (this.client.removeRecursive) {
-        this.client.removeRecursive(path, () => {
-          resolve();
-        });
-      } else {
-        this.client.remove(path, () => {
-          resolve();
-        });
-      }
+      const deleteRecursive = () => {
+        let value = removePath.shift();
+        if (value) {
+          this.client.removeRecursive(value, () => {
+            deleteRecursive();
+          });
+        } else {
+          resolve(removePath);
+        }
+      };
+      deleteRecursive();
     });
   }
 

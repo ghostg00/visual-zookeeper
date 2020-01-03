@@ -6,18 +6,23 @@ import TextArea from "antd/lib/input/TextArea";
 
 const { Item } = Form;
 
+export interface CreateData {
+  zkNodeName: string;
+  nodeData: string;
+}
+
 export interface CreateNodeFormProps extends FormComponentProps {
   visible: boolean;
   parentNode: string;
   onCancel: ModalProps["onCancel"];
-  onCreate: (values: any) => void;
+  onCreate: (values: CreateData) => void;
 }
 
 const CreateNodeForm: React.ComponentType<CreateNodeFormProps> = props => {
   const { visible, parentNode, onCancel, onCreate, form } = props;
-  const { getFieldDecorator } = form;
+  const { getFieldDecorator, validateFields } = form;
   const onOk = () => {
-    form.validateFields((err: any, values: any) => {
+    validateFields((err: any, values: CreateData) => {
       if (err) return;
       onCreate(values);
     });
@@ -45,12 +50,12 @@ const CreateNodeForm: React.ComponentType<CreateNodeFormProps> = props => {
       <Form {...formItemLayout}>
         <Item label="父节点">{parentNode}</Item>
         <Item label="节点名">
-          {getFieldDecorator("zkNodeName", {
+          {getFieldDecorator<CreateData>("zkNodeName", {
             rules: [{ required: true, message: "请输入节点名称" }]
           })(<Input placeholder={"请输入节点名称"} />)}
         </Item>
         <Item label="节点值">
-          {getFieldDecorator("nodeData")(
+          {getFieldDecorator<CreateData>("nodeData")(
             <TextArea
               placeholder={"请输入节点值"}
               autoSize={{ minRows: 4, maxRows: 4 }}

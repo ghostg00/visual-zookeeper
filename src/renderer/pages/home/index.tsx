@@ -28,7 +28,6 @@ import { useLocalStorageState } from "@umijs/hooks";
 import LogCard from "@/pages/home/components/LogCard";
 import { Dispatch } from "@/declare/dva";
 import Header from "@/pages/home/components/Header";
-// @ts-ignore
 
 const { TreeNode, DirectoryTree } = Tree;
 const { TextArea } = Input;
@@ -72,7 +71,7 @@ function Home(props: HomeProps) {
   const connect = () => {
     dispatch({
       type: "home/connect",
-      payload: { url }
+      payload: url
     }).then(() => {
       refreshRootTreeNode();
       setNodePath("/");
@@ -132,26 +131,12 @@ function Home(props: HomeProps) {
       }
       if (item.children && item.children.length > 0) {
         return (
-          <TreeNode
-            key={item.key}
-            title={title}
-            dataRef={item}
-            // icon={<Icon type="folder" />}
-            // icon={<IconFont type="icon-folder" style={{ fontSize: 20 }} />}
-          >
+          <TreeNode key={item.key} title={title} dataRef={item}>
             {renderTreeNodes(item.children!)}
           </TreeNode>
         );
       }
-      return (
-        <TreeNode
-          key={item.key}
-          title={title}
-          dataRef={item}
-          isLeaf
-          // icon={<IconFont type="icon-wenjian-" style={{ fontSize: 20 }} />}
-        />
-      );
+      return <TreeNode key={item.key} title={title} dataRef={item} isLeaf />;
     });
 
   const getParentKey = (key: string, tree: TreeNodeNormal[]) => {
@@ -210,7 +195,7 @@ function Home(props: HomeProps) {
       setNodeStat([]);
       setNodeACL(new ZkACL("", "", ""));
     } else {
-      setNodeName((e.node.props.title as any).props.children[2]);
+      setNodeName(e.node.props.dataRef.title);
       const path = e.node.props.eventKey as string;
       setNodePath(path);
       dispatch({
@@ -234,32 +219,35 @@ function Home(props: HomeProps) {
     }).then(() => message.success(`${nodePath}节点值更新成功`));
   };
 
-  const onCreate = (values: any) => {
-    let path = `${nodePath}${nodePath === "/" ? "" : "/"}${values.zkNodeName}`;
+  const onCreate = ({ zkNodeName, nodeData }) => {
+    const path = `${nodePath}${nodePath === "/" ? "" : "/"}${zkNodeName}`;
     dispatch({
       type: "home/create",
       payload: {
         path,
-        nodeData: values.nodeData
+        nodeData
       }
     }).then(() => {
       message.success(`${path}节点新增成功`);
+      setCreateNodeVisible(false);
     });
-    setCreateNodeVisible(false);
   };
 
   const onRemove = () => {
     if (nodePath) {
       Modal.confirm({
         title: "警告",
-        content: "您确定要删除此节点以及子节点吗？",
+        content: "您确定要删除选中节点以及子节点吗？",
+        okText: "确定",
+        cancelText: "取消",
         onOk: () => {
           return new Promise(resolve => {
             dispatch({
               type: "home/remove",
-              payload: { path: nodePath }
+              payload: { path: selectedKeys }
             }).then(() => {
-              message.success(`${nodePath}节点值删除成功`);
+              setSelectedKeys([]);
+              message.success(`节点删除成功`);
               resolve();
             });
           });
@@ -408,10 +396,8 @@ function Home(props: HomeProps) {
         </Row>
         <Row style={{ overflow: "auto", height: "calc(100% - 74px)" }}>
           <Spin spinning={treeLoading}>
-            <Tree
-              blockNode
-              // showIcon
-              // multiple
+            <DirectoryTree
+              multiple
               selectedKeys={selectedKeys}
               onSelect={onSelectTree}
               onExpand={onExpand}
@@ -419,7 +405,7 @@ function Home(props: HomeProps) {
               autoExpandParent={autoExpandParent}
             >
               {renderTreeNodes(treeData)}
-            </Tree>
+            </DirectoryTree>
           </Spin>
         </Row>
       </Card>

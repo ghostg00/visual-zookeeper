@@ -11,19 +11,19 @@ const event = (event: Event) => {
   logEvent.emit("log", event);
 };
 
-const model: ModelType<StateType> = {
+const model: ModelType<{}> = {
   namespace: "home",
   state: {},
 
   effects: {
-    *connect({ payload }, { call, put }) {
-      const data = yield call([zkClient, zkClient.connect], payload.url);
+    *connect({ payload }, { call }) {
+      const data = yield call([zkClient, zkClient.connect], payload);
       if (data) return data;
     },
-    *close({ payload }, { call, put }) {
+    *close({ payload }, { call }) {
       return yield call([zkClient, zkClient.close]);
     },
-    *getChildren({ payload, callback, event }, { call, put }) {
+    *getChildren({ payload, callback, event }, { call }) {
       const data = yield call(
         [zkClient, zkClient.getChildren],
         payload.path,
@@ -31,43 +31,39 @@ const model: ModelType<StateType> = {
       );
       callback && callback(data);
     },
-    *getChildrenTree({ payload, event }, { call, put }) {
+    *getChildrenTree({ payload, event }, { call }) {
       return yield call(
         [zkClient, zkClient.getChildrenTree],
         payload.rootNode,
         event
       );
     },
-    *create({ payload }, { call, put }) {
+    *create({ payload }, { call }) {
       return yield call(
         [zkClient, zkClient.create],
         payload.path,
         payload.nodeData
       );
     },
-    *remove({ payload }, { call, put }) {
+    *remove({ payload }, { call }) {
       return yield call([zkClient, zkClient.remove], payload.path);
     },
-    *getData({ payload }, { call, put }) {
+    *getData({ payload }, { call }) {
       const data = yield call(
         [zkClient, zkClient.getData],
         payload.path,
         event
       );
-      yield put({
-        type: "getDataReducer",
-        payload: data
-      });
       return data;
     },
-    *setData({ payload }, { call, put }) {
+    *setData({ payload }, { call }) {
       return yield call(
         [zkClient, zkClient.setData],
         payload.path,
         payload.data
       );
     },
-    *getACL({ payload }, { call, put }) {
+    *getACL({ payload }, { call }) {
       return yield call([zkClient, zkClient.getACL], payload.path);
     }
   },
