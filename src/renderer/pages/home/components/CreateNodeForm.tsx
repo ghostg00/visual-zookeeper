@@ -1,17 +1,14 @@
 import { Form, Input, Modal } from "antd";
 import React from "react";
-import { FormComponentProps } from "antd/es/form";
 import { ModalProps } from "antd/es/modal";
 import TextArea from "antd/lib/input/TextArea";
-
-const { Item } = Form;
 
 export interface CreateData {
   zkNodeName: string;
   nodeData: string;
 }
 
-export interface CreateNodeFormProps extends FormComponentProps {
+export interface CreateNodeFormProps {
   visible: boolean;
   parentNode: string;
   onCancel: ModalProps["onCancel"];
@@ -19,11 +16,10 @@ export interface CreateNodeFormProps extends FormComponentProps {
 }
 
 const CreateNodeForm: React.ComponentType<CreateNodeFormProps> = props => {
-  const { visible, parentNode, onCancel, onCreate, form } = props;
-  const { getFieldDecorator, validateFields } = form;
+  const { visible, parentNode, onCancel, onCreate } = props;
+  const [form] = Form.useForm();
   const onOk = () => {
-    validateFields((err: any, values: CreateData) => {
-      if (err) return;
+    form.validateFields().then(values => {
       onCreate(values);
     });
   };
@@ -47,24 +43,26 @@ const CreateNodeForm: React.ComponentType<CreateNodeFormProps> = props => {
       okText={"确定"}
       cancelText={"取消"}
     >
-      <Form {...formItemLayout}>
-        <Item label="父节点">{parentNode}</Item>
-        <Item label="节点名">
-          {getFieldDecorator<CreateData>("zkNodeName", {
-            rules: [{ required: true, message: "请输入节点名称" }]
-          })(<Input placeholder={"请输入节点名称"} />)}
-        </Item>
-        <Item label="节点值">
-          {getFieldDecorator<CreateData>("nodeData")(
-            <TextArea
-              placeholder={"请输入节点值"}
-              autoSize={{ minRows: 4, maxRows: 4 }}
-            />
-          )}
-        </Item>
+      <Form form={form} {...formItemLayout}>
+        <Form.Item label="父节点">
+          <span>{parentNode}</span>
+        </Form.Item>
+        <Form.Item
+          label="节点名"
+          name={"zkNodeName"}
+          rules={[{ required: true, message: "请输入节点名称" }]}
+        >
+          <Input placeholder={"请输入节点名称"} />
+        </Form.Item>
+        <Form.Item label="节点值" name={"nodeData"}>
+          <TextArea
+            placeholder={"请输入节点值"}
+            autoSize={{ minRows: 4, maxRows: 4 }}
+          />
+        </Form.Item>
       </Form>
     </Modal>
   );
 };
 
-export default Form.create<CreateNodeFormProps>()(CreateNodeForm);
+export default CreateNodeForm;

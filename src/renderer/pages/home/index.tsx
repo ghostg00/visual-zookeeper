@@ -4,7 +4,6 @@ import {
   Button,
   Card,
   Descriptions,
-  Icon,
   Input,
   message,
   Modal,
@@ -14,6 +13,8 @@ import {
   Tabs,
   Tree
 } from "antd";
+import { SmileOutlined } from "@ant-design/icons";
+
 import { StateType } from "@/pages/home/model";
 import { TreeProps } from "antd/es/tree";
 import { TreeNodeNormal } from "antd/es/tree/Tree";
@@ -21,7 +22,7 @@ import { ZkACL } from "@/utils/ZkClient";
 import logEvent from "../../utils/LogEvent";
 import { Event } from "node-zookeeper-client";
 import style from "./style.less";
-import { ColumnProps } from "antd/lib/table";
+// import { ColumnProps } from "antd/lib/table";
 import { Col, Row } from "antd/lib/grid";
 import CreateNodeForm from "@/pages/home/components/CreateNodeForm";
 import { useLocalStorageState } from "@umijs/hooks";
@@ -33,9 +34,9 @@ const { TreeNode, DirectoryTree } = Tree;
 const { TextArea } = Input;
 const { TabPane } = Tabs;
 
-const IconFont = Icon.createFromIconfontCN({
-  scriptUrl: "//at.alicdn.com/t/font_1396433_v6gjtuz5n.js"
-});
+// const IconFont = Icon.createFromIconfontCN({
+//   scriptUrl: "//at.alicdn.com/t/font_1396433_v6gjtuz5n.js"
+// });
 
 interface HomeProps {
   home: StateType;
@@ -307,7 +308,7 @@ function Home(props: HomeProps) {
       {/*    </Button>*/}
       {/*  </Col>*/}
       {/*</Row>*/}
-      <Row type={"flex"} align={"middle"} justify={"space-between"}>
+      <Row align={"middle"} justify={"space-between"}>
         <Col span={14}>
           <Input
             style={{ marginBottom: 20 }}
@@ -336,7 +337,7 @@ function Home(props: HomeProps) {
         size={"small"}
         bodyStyle={{ height: "calc(100% - 38px)" }}
       >
-        <Row type="flex" align="middle" justify="space-between">
+        <Row align="middle" justify="space-between">
           <Col>
             节点是否自动更新&nbsp;&nbsp;
             <Switch
@@ -389,7 +390,7 @@ function Home(props: HomeProps) {
           <Input
             style={{ marginTop: 10 }}
             placeholder="请输入节点名称查询"
-            prefix={<Icon type="search" />}
+            prefix={<Searc />}
             onChange={onSelectChange}
             allowClear
           />
