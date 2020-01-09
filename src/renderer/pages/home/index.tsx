@@ -13,8 +13,6 @@ import {
   Tabs,
   Tree
 } from "antd";
-import { SmileOutlined } from "@ant-design/icons";
-
 import { StateType } from "@/pages/home/model";
 import { TreeProps } from "antd/es/tree";
 import { TreeNodeNormal } from "antd/es/tree/Tree";
@@ -22,32 +20,41 @@ import { ZkACL } from "@/utils/ZkClient";
 import logEvent from "../../utils/LogEvent";
 import { Event } from "node-zookeeper-client";
 import style from "./style.less";
-// import { ColumnProps } from "antd/lib/table";
 import { Col, Row } from "antd/lib/grid";
-import CreateNodeForm from "@/pages/home/components/CreateNodeForm";
+import CreateNodeForm, {
+  CreateNodeFormProps
+} from "@/pages/home/components/CreateNodeForm";
 import { useLocalStorageState } from "@umijs/hooks";
 import LogCard from "@/pages/home/components/LogCard";
 import { Dispatch } from "@/declare/dva";
 import Header from "@/pages/home/components/Header";
+import { ColumnsType } from "antd/lib/table/Table";
+import {
+  DeleteOutlined,
+  PlusOutlined,
+  RedoOutlined
+} from "@ant-design/icons/lib";
 
-const { TreeNode, DirectoryTree } = Tree;
+const { DirectoryTree } = Tree;
 const { TextArea } = Input;
 const { TabPane } = Tabs;
-
-// const IconFont = Icon.createFromIconfontCN({
-//   scriptUrl: "//at.alicdn.com/t/font_1396433_v6gjtuz5n.js"
-// });
 
 interface HomeProps {
   home: StateType;
   dispatch: Dispatch;
 }
 
+interface NodeAttribute {
+  name: string;
+  value: string;
+  realValue: string;
+  description: string;
+}
+
 function Home(props: HomeProps) {
   const { dispatch } = props;
 
   const [url, setUrl] = useLocalStorageState("url", "127.0.0.1:2181");
-  const [splitPos, setSplitPos] = useLocalStorageState("splitPos", 600);
   const [isAuto, setIsAuto] = useLocalStorageState("isAuto", false);
 
   const [treeLoading, setTreeLoading] = useState(false);
@@ -91,7 +98,7 @@ function Home(props: HomeProps) {
       payload: { rootNode },
       event: isAuto ? event : undefined
     }).then((data: TreeNodeNormal[]) => {
-      setTreeData(data);
+      setTreeData(renderTreeNodes(data));
     });
   };
 
@@ -112,13 +119,16 @@ function Home(props: HomeProps) {
     });
   };
 
-  const renderTreeNodes = (data: TreeNodeNormal[]) =>
+  const renderTreeNodes: (data: TreeNodeNormal[]) => TreeNodeNormal[] = (
+    data: TreeNodeNormal[]
+  ) =>
     data.map(item => {
       const oldTitle = item.title as string;
       const index = oldTitle.indexOf(searchValue);
       const beforeStr = oldTitle.substr(0, index);
       const afterStr = oldTitle.substr(index + searchValue.length);
       let title = item.title;
+      const key = item.key;
       if (index > -1) {
         title = (
           <span>
@@ -131,13 +141,19 @@ function Home(props: HomeProps) {
         );
       }
       if (item.children && item.children.length > 0) {
-        return (
-          <TreeNode key={item.key} title={title} dataRef={item}>
-            {renderTreeNodes(item.children!)}
-          </TreeNode>
-        );
+        return {
+          title,
+          key,
+          dataRef: item,
+          children: renderTreeNodes(item.children!)
+        };
       }
-      return <TreeNode key={item.key} title={title} dataRef={item} isLeaf />;
+      return {
+        title,
+        key,
+        isLeaf: true,
+        dataRef: item
+      };
     });
 
   const getParentKey = (key: string, tree: TreeNodeNormal[]) => {
@@ -168,7 +184,7 @@ function Home(props: HomeProps) {
         }
       }
     };
-    generateList(treeData);
+    generateList(renderTreeNodes(treeData));
     const expandedKeys = dataList
       .map(item => {
         if (item.title.indexOf(value) > -1) {
@@ -214,13 +230,18 @@ function Home(props: HomeProps) {
   };
 
   const onSetData = () => {
-    dispatch({
-      type: "home/setData",
-      payload: { path: nodePath, data: nodeData }
-    }).then(() => message.success(`${nodePath}节点值更新成功`));
+    if (nodePath && nodeData) {
+      dispatch({
+        type: "home/setData",
+        payload: { path: nodePath, data: nodeData }
+      }).then(() => message.success(`${nodePath}节点值更新成功`));
+    }
   };
 
-  const onCreate = ({ zkNodeName, nodeData }) => {
+  const onCreate: CreateNodeFormProps["onCreate"] = ({
+    zkNodeName,
+    nodeData
+  }) => {
     const path = `${nodePath}${nodePath === "/" ? "" : "/"}${zkNodeName}`;
     dispatch({
       type: "home/create",
@@ -257,7 +278,7 @@ function Home(props: HomeProps) {
     }
   };
 
-  const columns: ColumnProps<any>[] = [
+  const columns: ColumnsType<NodeAttribute> = [
     {
       title: "名称",
       dataIndex: "name",
@@ -351,7 +372,7 @@ function Home(props: HomeProps) {
           <Col>
             <Button
               type={"link"}
-              icon={"plus"}
+              icon={<PlusOutlined />}
               disabled={!(treeData.length > 0)}
               style={{ padding: "0 5px" }}
               onClick={() => {
@@ -366,7 +387,7 @@ function Home(props: HomeProps) {
             </Button>
             <Button
               type={"link"}
-              icon={"delete"}
+              icon={<DeleteOutlined />}
               style={{
                 color: treeData.length > 0 ? "red" : undefined,
                 padding: "0 5px"
@@ -378,8 +399,9 @@ function Home(props: HomeProps) {
             </Button>
             <Button
               type={"link"}
-              icon={"reload"}
+              icon={<RedoOutlined />}
               style={{ padding: "0 5px" }}
+              disabled={!(treeData.length > 0)}
               onClick={refreshRootTreeNode}
             >
               刷新
@@ -390,25 +412,29 @@ function Home(props: HomeProps) {
           <Input
             style={{ marginTop: 10 }}
             placeholder="请输入节点名称查询"
-            prefix={<Searc />}
+            // prefix={<Searc />}
             onChange={onSelectChange}
             allowClear
           />
         </Row>
-        <Row style={{ overflow: "auto", height: "calc(100% - 74px)" }}>
-          <Spin spinning={treeLoading}>
+        <div
+          style={{
+            overflow: "auto",
+            height: "calc(100% - 74px)"
+          }}
+        >
+          <Spin spinning={treeLoading} style={{ width: "100%" }}>
             <DirectoryTree
               multiple
+              treeData={treeData}
               selectedKeys={selectedKeys}
               onSelect={onSelectTree}
               onExpand={onExpand}
               expandedKeys={expandedKeys}
               autoExpandParent={autoExpandParent}
-            >
-              {renderTreeNodes(treeData)}
-            </DirectoryTree>
+            />
           </Spin>
-        </Row>
+        </div>
       </Card>
     </Card>
   );
@@ -441,22 +467,18 @@ function Home(props: HomeProps) {
                 节点名称：{decodeURI ? decodeURIComponent(nodeName) : nodeName}
               </p>
             </div>
-            <Row align={"middle"} justify={"center"}>
-              <Col>
-                <div style={{ lineHeight: "48px" }}>
-                  URL解码：
-                  <Switch onChange={checked => setDecodeURI(checked)} />
-                </div>
-              </Col>
-            </Row>
+            <div style={{ lineHeight: "48px" }}>
+              URL解码：
+              <Switch onChange={checked => setDecodeURI(checked)} />
+            </div>
             <TextArea
               value={nodeData}
               autoSize={{ minRows: 4, maxRows: 4 }}
               onChange={event => setNodeData(event.target.value)}
             />
-            <Row align={"middle"} justify={"center"}>
+            <Row align={"middle"}>
               <Col>
-                <div style={{ marginTop: 12 }}>
+                <div style={{ marginTop: 10 }}>
                   <Button type="primary" onClick={onSetData}>
                     保存
                   </Button>
@@ -468,7 +490,7 @@ function Home(props: HomeProps) {
             tab={<span className={style.cardTitle}>节点属性</span>}
             key="2"
           >
-            <Table
+            <Table<NodeAttribute>
               rowKey={"name"}
               size={"small"}
               columns={columns}

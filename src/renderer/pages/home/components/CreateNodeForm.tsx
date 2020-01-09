@@ -2,6 +2,7 @@ import { Form, Input, Modal } from "antd";
 import React from "react";
 import { ModalProps } from "antd/es/modal";
 import TextArea from "antd/lib/input/TextArea";
+import { FormProps } from "antd/lib/form/Form";
 
 export interface CreateData {
   zkNodeName: string;
@@ -15,24 +16,26 @@ export interface CreateNodeFormProps {
   onCreate: (values: CreateData) => void;
 }
 
+const formItemLayout: FormProps = {
+  labelCol: {
+    xs: { span: 24 },
+    sm: { span: 4 }
+  },
+  wrapperCol: {
+    xs: { span: 24 },
+    sm: { span: 20 }
+  }
+};
+
 const CreateNodeForm: React.ComponentType<CreateNodeFormProps> = props => {
   const { visible, parentNode, onCancel, onCreate } = props;
   const [form] = Form.useForm();
   const onOk = () => {
     form.validateFields().then(values => {
-      onCreate(values);
+      onCreate(values as CreateData);
     });
   };
-  const formItemLayout = {
-    labelCol: {
-      xs: { span: 24 },
-      sm: { span: 4 }
-    },
-    wrapperCol: {
-      xs: { span: 24 },
-      sm: { span: 20 }
-    }
-  };
+
   return (
     <Modal
       destroyOnClose
@@ -48,13 +51,13 @@ const CreateNodeForm: React.ComponentType<CreateNodeFormProps> = props => {
           <span>{parentNode}</span>
         </Form.Item>
         <Form.Item
-          label="节点名"
           name={"zkNodeName"}
+          label="节点名"
           rules={[{ required: true, message: "请输入节点名称" }]}
         >
           <Input placeholder={"请输入节点名称"} />
         </Form.Item>
-        <Form.Item label="节点值" name={"nodeData"}>
+        <Form.Item name={"nodeData"} label="节点值">
           <TextArea
             placeholder={"请输入节点值"}
             autoSize={{ minRows: 4, maxRows: 4 }}

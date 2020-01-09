@@ -3,12 +3,12 @@ import style from "@/pages/home/style.less";
 import React, { useEffect, useRef, useState } from "react";
 import logEvent from "@/utils/LogEvent";
 import moment from "moment";
+import { DeleteOutlined } from "@ant-design/icons/lib";
 
 let logArr: string[] = [];
 
-const LogCard: React.FC<any> = props => {
+const LogCard: React.FC = () => {
   const [log, setLog] = useState("");
-
   const logDiv = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -26,10 +26,7 @@ const LogCard: React.FC<any> = props => {
 
   return (
     <Card
-      style={{
-        // height: "calc(100% - 556px)"
-        height: "calc(100% - 580px)"
-      }}
+      style={{ height: "calc(100% - 580px)" }}
       title={<span className={style.cardTitle}>日志</span>}
       bordered={false}
       headStyle={{ borderBottom: "none" }}
@@ -37,7 +34,7 @@ const LogCard: React.FC<any> = props => {
       extra={
         <Button
           type="link"
-          icon={"delete"}
+          icon={<DeleteOutlined />}
           style={{ color: "red" }}
           onClick={() => {
             logArr = [];

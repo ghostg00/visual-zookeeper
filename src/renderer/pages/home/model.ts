@@ -49,12 +49,7 @@ const model: ModelType<{}> = {
       return yield call([zkClient, zkClient.remove], payload.path);
     },
     *getData({ payload }, { call }) {
-      const data = yield call(
-        [zkClient, zkClient.getData],
-        payload.path,
-        event
-      );
-      return data;
+      return yield call([zkClient, zkClient.getData], payload.path, event);
     },
     *setData({ payload }, { call }) {
       return yield call(

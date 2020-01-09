@@ -1,14 +1,14 @@
+import React from "react";
 import style from "@/pages/home/style.less";
 import { Col, Row } from "antd/lib/grid";
-import React from "react";
-import { Icon } from "antd";
 // @ts-ignore
 import device from "current-device";
 import * as Electron from "electron";
+import { CloseOutlined, MinusOutlined } from "@ant-design/icons";
+
 let electron = window.require("electron") as Electron.AllElectron;
 
-
-const Header: React.ComponentType<any> = props => {
+const Header: React.FC = () => {
   const renderWindowsHeaderOperate = () => {
     if (device.windows()) {
       const currentWindow = electron.remote.getCurrentWindow();
@@ -19,13 +19,11 @@ const Header: React.ComponentType<any> = props => {
             color: "rgba(255,255,255,1)"
           }}
         >
-          <Icon
-            type="minus"
+          <MinusOutlined
             style={{ fontSize: 22, marginRight: 8 }}
             onClick={() => currentWindow.minimize()}
           />
-          <Icon
-            type="close"
+          <CloseOutlined
             style={{ fontSize: 22, marginRight: 8 }}
             onClick={() => currentWindow.close()}
           />
@@ -35,19 +33,12 @@ const Header: React.ComponentType<any> = props => {
   };
 
   return (
-    <Row
-      className={style.header}
-      type={"flex"}
-      align={"middle"}
-      justify={"space-between"}
-    >
+    <Row className={style.header} align={"middle"} justify={"space-between"}>
       <Col span={4} offset={10}>
         <span
           style={{
-            fontSize: 20,
-            color: "rgba(255,255,255,1)",
-            lineHeight: 22,
-            marginLeft: 10
+            fontSize: 22,
+            color: "rgba(255,255,255,1)"
           }}
         >
           Visual-Zookeeper

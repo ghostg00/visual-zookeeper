@@ -6,6 +6,7 @@ declare type Effect<S> = (
   effects: EffectsCommandMap & { select: <T>(func: (state: S) => T) => T }
 ) => any;
 
+// @ts-ignore
 declare interface ModelType<S> extends Model {
   namespace: string;
   state?: S;
