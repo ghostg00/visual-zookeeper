@@ -51,13 +51,14 @@ interface NodeAttribute {
   description: string;
 }
 
-function Home(props: HomeProps) {
+const Home: React.FC<HomeProps> = props => {
   const { dispatch } = props;
 
   const [url, setUrl] = useLocalStorageState("url", "127.0.0.1:2181");
   const [isAuto, setIsAuto] = useLocalStorageState("isAuto", false);
 
   const [treeLoading, setTreeLoading] = useState(false);
+  const [treeNodeData, setTreeNodeData] = useState<TreeNodeNormal[]>([]);
   const [treeData, setTreeData] = useState<TreeNodeNormal[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
@@ -75,6 +76,7 @@ function Home(props: HomeProps) {
 
   useEffect(() => refreshRootTreeNode(), [isAuto]);
   useEffect(() => setTreeLoading(false), [treeData]);
+  useEffect(() => onSelectChange(searchValue), [searchValue]);
 
   const connect = () => {
     dispatch({
@@ -98,6 +100,7 @@ function Home(props: HomeProps) {
       payload: { rootNode },
       event: isAuto ? event : undefined
     }).then((data: TreeNodeNormal[]) => {
+      setTreeNodeData(data);
       setTreeData(renderTreeNodes(data));
     });
   };
@@ -148,12 +151,7 @@ function Home(props: HomeProps) {
           children: renderTreeNodes(item.children!)
         };
       }
-      return {
-        title,
-        key,
-        isLeaf: true,
-        dataRef: item
-      };
+      return { title, key, isLeaf: true, dataRef: item };
     });
 
   const getParentKey = (key: string, tree: TreeNodeNormal[]) => {
@@ -171,8 +169,7 @@ function Home(props: HomeProps) {
     return parentKey;
   };
 
-  const onSelectChange: ChangeEventHandler<HTMLInputElement> = e => {
-    const value = e.target.value;
+  const onSelectChange = (value: string) => {
     const dataList: { key: string; title: string }[] = [];
     const generateList = (data: TreeNodeNormal[]) => {
       for (let i = 0; i < data.length; i++) {
@@ -184,7 +181,7 @@ function Home(props: HomeProps) {
         }
       }
     };
-    generateList(renderTreeNodes(treeData));
+    generateList(treeNodeData);
     const expandedKeys = dataList
       .map(item => {
         if (item.title.indexOf(value) > -1) {
@@ -196,6 +193,7 @@ function Home(props: HomeProps) {
     setSearchValue(value);
     setExpandedKeys(expandedKeys as string[]);
     setAutoExpandParent(true);
+    setTreeData(renderTreeNodes(treeNodeData));
   };
 
   const onExpand = (expandedKeys: string[]) => {
@@ -413,7 +411,7 @@ function Home(props: HomeProps) {
             style={{ marginTop: 10 }}
             placeholder="请输入节点名称查询"
             // prefix={<Searc />}
-            onChange={onSelectChange}
+            onChange={e => setSearchValue(e.target.value)}
             allowClear
           />
         </Row>
@@ -553,7 +551,7 @@ function Home(props: HomeProps) {
       />
     </>
   );
-}
+};
 
 export default connect(({ home }: { home: StateType }) => ({
   home
