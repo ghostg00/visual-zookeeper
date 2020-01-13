@@ -13,7 +13,9 @@
 ## 📦 开发
 
 ```bash
-yarn run start
+yarn
+yarn run start:renderer
+yarn run start:main
 ```
 
 ## 📦 打包
