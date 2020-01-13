@@ -26,7 +26,7 @@ const LogCard: React.FC = () => {
 
   return (
     <Card
-      style={{ height: "calc(100% - 580px)" }}
+      style={{ height: "calc(100% - 592px)" }}
       title={<span className={style.cardTitle}>日志</span>}
       bordered={false}
       headStyle={{ borderBottom: "none" }}
