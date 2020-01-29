@@ -1,7 +1,7 @@
 {
   "name": "visual-zookeeper",
   "private": true,
-  "version": "2.1.0",
+  "version": "2.1.1",
   "main": "./dist/main/main.js",
   "scripts": {
     "start": "concurrently.cmd \"yarn start:main\" \"yarn start:renderer\"",
@@ -12,8 +12,8 @@
     "build:renderer": "cross-env APP_ROOT=src/renderer umi build",
     "pack": "npm run build:renderer && npm run build-main-prod && electron-builder --dir",
     "dist": "electron-builder",
-    "dist-mac": "electron-builder -m",
-    "dist-win": "electron-builder -w"
+    "dist-mac": "npm run build:renderer && npm run build-main-prod && electron-builder -m",
+    "dist-win": "npm run build:renderer && npm run build-main-prod && electron-builder -w"
   },
   "build": {
     "files": [

@@ -447,11 +447,11 @@ const Home: React.FC<HomeProps> = props => {
           <TabPane
             tab={<span className={style.cardTitle}>节点数据</span>}
             key="1"
-            style={{ height: 457 }}
+            style={{ height: 468 }}
           >
             <div
               style={{
-                height: 270,
+                height: 280,
                 wordBreak: "break-word",
                 overflow: "auto",
                 WebkitUserSelect: "text"
