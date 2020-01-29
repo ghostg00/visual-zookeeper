@@ -35,7 +35,6 @@ import {
   RedoOutlined
 } from "@ant-design/icons/lib";
 
-const { DirectoryTree } = Tree;
 const { TextArea } = Input;
 const { TabPane } = Tabs;
 
@@ -196,7 +195,7 @@ const Home: React.FC<HomeProps> = props => {
     setTreeData(renderTreeNodes(treeNodeData));
   };
 
-  const onExpand = (expandedKeys: string[]) => {
+  const onExpand: TreeProps["onExpand"] = (expandedKeys) => {
     setExpandedKeys(expandedKeys);
     setAutoExpandParent(false);
   };
@@ -422,7 +421,7 @@ const Home: React.FC<HomeProps> = props => {
           }}
         >
           <Spin spinning={treeLoading} style={{ width: "100%" }}>
-            <DirectoryTree
+            <Tree.DirectoryTree
               multiple
               treeData={treeData}
               selectedKeys={selectedKeys}
