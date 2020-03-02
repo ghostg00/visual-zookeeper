@@ -35,22 +35,22 @@
     }
   },
   "dependencies": {
-    "@ant-design/icons": "^4.0.0-alpha.19",
-    "@umijs/hooks": "^1.5.3",
-    "antd": "^4.0.0-rc.3",
+    "@ant-design/icons": "^4.0.2",
+    "@umijs/hooks": "^1.6.2",
+    "antd": "^4.0.0",
     "current-device": "^0.10.0",
     "dva": "^2.6.0-beta.20",
     "moment": "^2.24.0",
     "nedb": "^1.8.0",
     "node-zookeeper-client": "^1.1.0",
-    "react": "^16.12.0",
-    "react-dom": "^16.12.0"
+    "react": "^16.13.0",
+    "react-dom": "^16.13.0"
   },
   "devDependencies": {
     "@types/nedb": "^1.8.9",
     "@types/node-zookeeper-client": "^0.2.7",
-    "@types/react": "^16.9.17",
-    "@types/react-dom": "^16.9.4",
+    "@types/react": "^16.9.23",
+    "@types/react-dom": "^16.9.5",
     "@types/react-test-renderer": "^16.9.1",
     "awesome-typescript-loader": "^5.2.1",
     "babel-eslint": "^10.0.3",
@@ -61,11 +61,11 @@
     "electron-debug": "^3.0.1",
     "electron-webpack": "^2.7.4",
     "electron-webpack-ts": "^3.2.0",
-    "umi": "^2.12.9",
-    "umi-plugin-react": "^1.14.12",
-    "umi-types": "^0.5.11",
-    "webpack": "4.41.5",
-    "webpack-cli": "^3.3.10",
+    "umi": "^2.13.3",
+    "umi-plugin-react": "^1.15.2",
+    "umi-types": "^0.5.12",
+    "webpack": "^4.41.6",
+    "webpack-cli": "^3.3.11",
     "webpack-merge": "^4.2.2"
   },
   "electronWebpack": {
