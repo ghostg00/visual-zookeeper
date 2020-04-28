@@ -7,8 +7,8 @@ let zkClient = new ZkClient();
 
 export interface StateType {}
 
-const event = (event: Event) => {
-  logEvent.emit("log", event);
+const event = (e: Event) => {
+  logEvent.emit("log", e);
 };
 
 const model: ModelType<{}> = {

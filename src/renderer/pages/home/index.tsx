@@ -61,7 +61,7 @@ const Home: React.FC<HomeProps> = props => {
   const [treeData, setTreeData] = useState<TreeNodeNormal[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [searchValue, setSearchValue] = useState("");
-  const [expandedKeys, setExpandedKeys] = useState<string[]>([]);
+  const [expandedKeys, setExpandedKeys] = useState<(string | number)[]>([]);
   const [autoExpandParent, setAutoExpandParent] = useState(false);
 
   const [rootNode, setRootNode] = useState("/");
@@ -87,8 +87,8 @@ const Home: React.FC<HomeProps> = props => {
       message.success("连接成功");
     });
   };
-  const event: any = (event: Event) => {
-    logEvent.emit("log", event);
+  const event: any = (e: Event) => {
+    logEvent.emit("log", e);
     isAuto && refreshRootTreeNode();
   };
 
@@ -147,14 +147,17 @@ const Home: React.FC<HomeProps> = props => {
           title,
           key,
           dataRef: item,
-          children: renderTreeNodes(item.children!)
+          children: renderTreeNodes(item.children)
         };
       }
       return { title, key, isLeaf: true, dataRef: item };
     });
 
-  const getParentKey = (key: string, tree: TreeNodeNormal[]) => {
-    let parentKey: string = "";
+  const getParentKey: (
+    key: string | number,
+    tree: TreeNodeNormal[]
+  ) => string | number = (key, tree) => {
+    let parentKey: string | number = "";
     for (let i = 0; i < tree.length; i++) {
       const node = tree[i];
       if (node.children) {
@@ -169,12 +172,12 @@ const Home: React.FC<HomeProps> = props => {
   };
 
   const onSelectChange = (value: string) => {
-    const dataList: { key: string; title: string }[] = [];
+    const dataList: { key: string | number; title: string }[] = [];
     const generateList = (data: TreeNodeNormal[]) => {
       for (let i = 0; i < data.length; i++) {
         const node = data[i];
         const { key } = node;
-        dataList.push({ key, title: key });
+        dataList.push({ key, title: key as string });
         if (node.children) {
           generateList(node.children);
         }
@@ -195,7 +198,7 @@ const Home: React.FC<HomeProps> = props => {
     setTreeData(renderTreeNodes(treeNodeData));
   };
 
-  const onExpand: TreeProps["onExpand"] = (expandedKeys) => {
+  const onExpand: TreeProps["onExpand"] = expandedKeys => {
     setExpandedKeys(expandedKeys);
     setAutoExpandParent(false);
   };
@@ -209,8 +212,8 @@ const Home: React.FC<HomeProps> = props => {
       setNodeStat([]);
       setNodeACL(new ZkACL("", "", ""));
     } else {
-      setNodeName(e.node.props.dataRef.title);
-      const path = e.node.props.eventKey as string;
+      setNodeName((e.node as any).props.dataRef.title);
+      const path = (e.node as any).props.eventKey as string;
       setNodePath(path);
       dispatch({
         type: "home/getData",
@@ -222,7 +225,7 @@ const Home: React.FC<HomeProps> = props => {
       dispatch({
         type: "home/getACL",
         payload: { path }
-      }).then((nodeACL: ZkACL) => setNodeACL(nodeACL));
+      }).then((value: ZkACL) => setNodeACL(value));
     }
   };
 
@@ -333,7 +336,7 @@ const Home: React.FC<HomeProps> = props => {
             addonBefore="URL"
             placeholder="请输入zookeeper url"
             value={url}
-            onChange={event => setUrl(event.target.value)}
+            onChange={e => setUrl(e.target.value)}
           />
         </Col>
         <Col>
@@ -370,7 +373,7 @@ const Home: React.FC<HomeProps> = props => {
             <Button
               type={"link"}
               icon={<PlusOutlined />}
-              disabled={!(treeData.length > 0)}
+              disabled={treeData.length <= 0}
               style={{ padding: "0 5px" }}
               onClick={() => {
                 if (!nodePath) {
@@ -389,7 +392,7 @@ const Home: React.FC<HomeProps> = props => {
                 color: treeData.length > 0 ? "red" : undefined,
                 padding: "0 5px"
               }}
-              disabled={!(treeData.length > 0)}
+              disabled={treeData.length <= 0}
               onClick={onRemove}
             >
               删除
@@ -398,7 +401,7 @@ const Home: React.FC<HomeProps> = props => {
               type={"link"}
               icon={<RedoOutlined />}
               style={{ padding: "0 5px" }}
-              disabled={!(treeData.length > 0)}
+              disabled={treeData.length <= 0}
               onClick={refreshRootTreeNode}
             >
               刷新
@@ -471,7 +474,7 @@ const Home: React.FC<HomeProps> = props => {
             <TextArea
               value={nodeData}
               autoSize={{ minRows: 4, maxRows: 4 }}
-              onChange={event => setNodeData(event.target.value)}
+              onChange={e => setNodeData(e.target.value)}
             />
             <Row align={"middle"}>
               <Col>
