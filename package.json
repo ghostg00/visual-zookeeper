@@ -56,7 +56,7 @@
     "babel-eslint": "^10.0.3",
     "concurrently": "^5.0.2",
     "cross-env": "^6.0.3",
-    "electron": "5.0.13",
+    "electron": "9.1.0",
     "electron-builder": "^21.2.0",
     "electron-debug": "^3.0.1",
     "electron-webpack": "^2.7.4",
