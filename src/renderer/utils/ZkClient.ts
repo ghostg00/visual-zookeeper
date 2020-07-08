@@ -1,11 +1,9 @@
 import { Client, Event, Exception, Stat } from "node-zookeeper-client";
-import { MomentInput } from "moment";
+import moment, { MomentInput } from "moment";
 import logEvent from "./LogEvent";
 import { TreeNodeNormal } from "antd/es/tree/Tree";
 import { message } from "antd";
-import e from "zookeeper-cluster-client";
 
-const moment = require("moment");
 const { Buffer } = window.require("buffer");
 const nodeZookeeperClient = window.require("node-zookeeper-client");
 
@@ -15,15 +13,16 @@ class ZkClient {
 
   async connect(url: string) {
     if (this.client) return;
+    console.log(url);
     this.url = url;
-    const promise = new Promise<Client>(resolve => {
+    const promise = new Promise<Client>((resolve) => {
       let client = nodeZookeeperClient.createClient(url) as Client;
       let connected = false;
       client.once("connected", () => {
         connected = true;
         resolve(client);
       });
-      client.on("state", state => {
+      client.on("state", (state) => {
         logEvent.emit("log", state);
       });
       client.connect();
@@ -36,7 +35,7 @@ class ZkClient {
   }
 
   async close() {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       if (!this.client) return;
       (this.client as Client).close();
       this.client = null;
@@ -45,7 +44,7 @@ class ZkClient {
   }
 
   async getChildren(path: string, watcher: (event: Event) => void) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       if (watcher) {
         this.client.getChildren(path, watcher, (error: any, children: any) => {
           resolve(children);
@@ -63,7 +62,7 @@ class ZkClient {
       await this.close();
       await this.connect(this.url);
     }
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       if (!this.client) return [];
       this.client.listSubTreeBFS(
         rootNode.startsWith("/") ? rootNode : "/" + rootNode,
@@ -74,13 +73,13 @@ class ZkClient {
           children.shift();
           let trees: TreeNodeNormal[] = [];
           let list: (TreeNodeNormal & { parentKey: string })[] = children.map(
-            item => {
+            (item) => {
               let strings = item.split("/");
               return {
                 key: item,
                 title: strings[strings.length - 1],
                 parentKey: item.substring(0, item.lastIndexOf("/")),
-                children: []
+                children: [],
               };
             }
           );
@@ -111,7 +110,7 @@ class ZkClient {
 
   async remove(path: string[]) {
     const removePath = [...path];
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       const deleteRecursive = () => {
         let value = removePath.shift();
         if (value) {
@@ -127,7 +126,7 @@ class ZkClient {
   }
 
   async create(path: string, data: string, mode: number = 0) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       let client = this.client as Client;
       if (data) {
         let buffer = Buffer.from(data);
@@ -139,7 +138,7 @@ class ZkClient {
   }
 
   async getData(path: string, watcher: (event: Event) => void) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       (this.client as Client).getData(path, watcher, (error, data, stat) => {
         const statData = extracted(stat);
         resolve([data && data.toLocaleString(), statData]);
@@ -148,7 +147,7 @@ class ZkClient {
   }
 
   async setData(path: string, data: string) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       let buffer = Buffer.from(data);
       (this.client as Client).setData(path, buffer, -1, () => {
         resolve();
@@ -157,7 +156,7 @@ class ZkClient {
   }
 
   async getACL(path: string) {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       (this.client as Client).getACL(path, (error, acls) => {
         let acl = acls[0] as any;
         let zkACL = new ZkACL(acl.id.scheme, acl.id.id, acl.permission);
@@ -167,26 +166,18 @@ class ZkClient {
   }
 }
 
-const hexString = (longBuffer: any) => {
-  return (longBuffer as Buffer).toString("hex");
-};
+const hexString = (longBuffer: any) => (longBuffer as Buffer).toString("hex");
 
-const int64 = (longBuffer: any) => {
-  const hexString = (longBuffer as Buffer).toString("hex");
-  return parseInt(hexString, 16);
-};
+const int64 = (longBuffer: any) => parseInt(hexString(longBuffer), 16);
 
-const format = (inp: MomentInput) => {
-  return moment(inp).format("YYYY-MM-DD HH:mm:ss");
-};
-
+const format = (inp: MomentInput) => moment(inp).format("YYYY-MM-DD HH:mm:ss");
 const extracted = (stat: Stat) => {
   return [
     {
       name: "cZxid",
       description: "这个值是当前会话事物创建产生ID",
       value: int64(stat.czxid),
-      realValue: `0x${hexString(stat.czxid).replace(/0+/, "")}`
+      realValue: `0x${hexString(stat.czxid).replace(/0+/, "")}`,
     },
     {
       name: "ctime",
@@ -194,13 +185,13 @@ const extracted = (stat: Stat) => {
       value: format(int64(stat.ctime)),
       realValue: `${new Date(int64(stat.ctime)).toString()}(${int64(
         stat.ctime
-      )})`
+      )})`,
     },
     {
       name: "mZxid",
       description: "最近更新节点的事物ID",
       value: int64(stat.mzxid),
-      realValue: `0x${hexString(stat.mzxid).replace(/0+/, "")}`
+      realValue: `0x${hexString(stat.mzxid).replace(/0+/, "")}`,
     },
     {
       name: "mtime",
@@ -208,31 +199,31 @@ const extracted = (stat: Stat) => {
       value: format(int64(stat.mtime)),
       realValue: `${new Date(int64(stat.mtime)).toString()}(${int64(
         stat.mtime
-      )})`
+      )})`,
     },
     {
       name: "pZxid",
       description: "该节点的子节点最后修改的事物ID",
       value: int64(stat.pzxid),
-      realValue: `0x${hexString(stat.pzxid).replace(/0+/, "")}`
+      realValue: `0x${hexString(stat.pzxid).replace(/0+/, "")}`,
     },
     {
       name: "cversion",
       description: "子节点的版本号",
       value: stat.cversion,
-      realValue: stat.cversion
+      realValue: stat.cversion,
     },
     {
       name: "dataVersion",
       description: "数据的版本号",
       value: stat.version,
-      realValue: stat.version
+      realValue: stat.version,
     },
     {
       name: "aclVersion",
       description: "acl的版本号",
       value: stat.aversion,
-      realValue: stat.aversion
+      realValue: stat.aversion,
     },
     {
       name: "ephemeralOwner",
@@ -242,20 +233,20 @@ const extracted = (stat: Stat) => {
         int64(stat.ephemeralOwner) != 0
           ? hexString(stat.ephemeralOwner).replace(/0+/, "")
           : 0
-      }`
+      }`,
     },
     {
       name: "dataLength",
       description: "数据长度",
       value: stat.dataLength,
-      realValue: stat.dataLength
+      realValue: stat.dataLength,
     },
     {
       name: "numChildren",
       description: "子节点的个数",
       value: stat.numChildren,
-      realValue: stat.numChildren
-    }
+      realValue: stat.numChildren,
+    },
   ];
 };
 

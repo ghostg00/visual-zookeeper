@@ -11,7 +11,7 @@ import {
   Switch,
   Table,
   Tabs,
-  Tree
+  Tree,
 } from "antd";
 import { StateType } from "@/pages/home/model";
 import { TreeProps } from "antd/es/tree";
@@ -22,7 +22,7 @@ import { Event } from "node-zookeeper-client";
 import style from "./style.less";
 import { Col, Row } from "antd/lib/grid";
 import CreateNodeForm, {
-  CreateNodeFormProps
+  CreateNodeFormProps,
 } from "@/pages/home/components/CreateNodeForm";
 import { useLocalStorageState } from "@umijs/hooks";
 import LogCard from "@/pages/home/components/LogCard";
@@ -31,8 +31,9 @@ import Header from "@/pages/home/components/Header";
 import { ColumnsType } from "antd/lib/table/Table";
 import {
   DeleteOutlined,
+  LinkOutlined,
   PlusOutlined,
-  RedoOutlined
+  RedoOutlined,
 } from "@ant-design/icons/lib";
 
 const { TextArea } = Input;
@@ -50,10 +51,11 @@ interface NodeAttribute {
   description: string;
 }
 
-const Home: React.FC<HomeProps> = props => {
+const Home: React.FC<HomeProps> = (props) => {
   const { dispatch } = props;
 
-  const [url, setUrl] = useLocalStorageState("url", "127.0.0.1:2181");
+  const [ip, setIp] = useLocalStorageState("ip", "127.0.0.1");
+  const [port, setPort] = useLocalStorageState("port", "2181");
   const [isAuto, setIsAuto] = useLocalStorageState("isAuto", false);
 
   const [treeLoading, setTreeLoading] = useState(false);
@@ -80,7 +82,7 @@ const Home: React.FC<HomeProps> = props => {
   const connect = () => {
     dispatch({
       type: "home/connect",
-      payload: url
+      payload: ip + ":" + port,
     }).then(() => {
       refreshRootTreeNode();
       setNodePath("/");
@@ -97,7 +99,7 @@ const Home: React.FC<HomeProps> = props => {
     dispatch({
       type: "home/getChildrenTree",
       payload: { rootNode },
-      event: isAuto ? event : undefined
+      event: isAuto ? event : undefined,
     }).then((data: TreeNodeNormal[]) => {
       setTreeNodeData(data);
       setTreeData(renderTreeNodes(data));
@@ -105,9 +107,9 @@ const Home: React.FC<HomeProps> = props => {
   };
 
   const close = async () => {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       dispatch({
-        type: "home/close"
+        type: "home/close",
       }).then(() => {
         setExpandedKeys([]);
         setTreeData([]);
@@ -124,7 +126,7 @@ const Home: React.FC<HomeProps> = props => {
   const renderTreeNodes: (data: TreeNodeNormal[]) => TreeNodeNormal[] = (
     data: TreeNodeNormal[]
   ) =>
-    data.map(item => {
+    data.map((item) => {
       const oldTitle = item.title as string;
       const index = oldTitle.indexOf(searchValue);
       const beforeStr = oldTitle.substr(0, index);
@@ -147,7 +149,7 @@ const Home: React.FC<HomeProps> = props => {
           title,
           key,
           dataRef: item,
-          children: renderTreeNodes(item.children)
+          children: renderTreeNodes(item.children),
         };
       }
       return { title, key, isLeaf: true, dataRef: item };
@@ -161,7 +163,7 @@ const Home: React.FC<HomeProps> = props => {
     for (let i = 0; i < tree.length; i++) {
       const node = tree[i];
       if (node.children) {
-        if (node.children.some(item => item.key === key)) {
+        if (node.children.some((item) => item.key === key)) {
           parentKey = node.key;
         } else if (getParentKey(key, node.children)) {
           parentKey = getParentKey(key, node.children);
@@ -185,7 +187,7 @@ const Home: React.FC<HomeProps> = props => {
     };
     generateList(treeNodeData);
     const expandedKeys = dataList
-      .map(item => {
+      .map((item) => {
         if (item.title.indexOf(value) > -1) {
           return getParentKey(item.key, treeData);
         }
@@ -198,13 +200,13 @@ const Home: React.FC<HomeProps> = props => {
     setTreeData(renderTreeNodes(treeNodeData));
   };
 
-  const onExpand: TreeProps["onExpand"] = expandedKeys => {
+  const onExpand: TreeProps["onExpand"] = (expandedKeys) => {
     setExpandedKeys(expandedKeys);
     setAutoExpandParent(false);
   };
 
   const onSelectTree: TreeProps["onSelect"] = (selectedKeys, e) => {
-    setSelectedKeys(selectedKeys);
+    setSelectedKeys(selectedKeys as string[]);
     if (selectedKeys.length === 0) {
       setNodeName("");
       setNodePath("/");
@@ -217,14 +219,14 @@ const Home: React.FC<HomeProps> = props => {
       setNodePath(path);
       dispatch({
         type: "home/getData",
-        payload: { path }
+        payload: { path },
       }).then((data: [string, []]) => {
         setNodeData(data[0]);
         setNodeStat(data[1]);
       });
       dispatch({
         type: "home/getACL",
-        payload: { path }
+        payload: { path },
       }).then((value: ZkACL) => setNodeACL(value));
     }
   };
@@ -233,22 +235,22 @@ const Home: React.FC<HomeProps> = props => {
     if (nodePath && nodeData) {
       dispatch({
         type: "home/setData",
-        payload: { path: nodePath, data: nodeData }
+        payload: { path: nodePath, data: nodeData },
       }).then(() => message.success(`${nodePath}节点值更新成功`));
     }
   };
 
   const onCreate: CreateNodeFormProps["onCreate"] = ({
     zkNodeName,
-    nodeData
+    nodeData,
   }) => {
     const path = `${nodePath}${nodePath === "/" ? "" : "/"}${zkNodeName}`;
     dispatch({
       type: "home/create",
       payload: {
         path,
-        nodeData
-      }
+        nodeData,
+      },
     }).then(() => {
       message.success(`${path}节点新增成功`);
       setCreateNodeVisible(false);
@@ -263,17 +265,17 @@ const Home: React.FC<HomeProps> = props => {
         okText: "确定",
         cancelText: "取消",
         onOk: () => {
-          return new Promise(resolve => {
+          return new Promise((resolve) => {
             dispatch({
               type: "home/remove",
-              payload: { path: selectedKeys }
+              payload: { path: selectedKeys },
             }).then(() => {
               setSelectedKeys([]);
               message.success(`节点删除成功`);
               resolve();
             });
           });
-        }
+        },
       });
     }
   };
@@ -282,69 +284,58 @@ const Home: React.FC<HomeProps> = props => {
     {
       title: "名称",
       dataIndex: "name",
-      width: 150
+      width: 150,
     },
     {
       title: "值",
       dataIndex: "value",
-      width: 200
+      width: 200,
     },
     {
       title: "真实值",
       dataIndex: "realValue",
-      ellipsis: true
+      ellipsis: true,
     },
     {
       title: "描述",
       dataIndex: "description",
-      ellipsis: true
-    }
+      ellipsis: true,
+    },
   ];
 
   const leftCard = (
     <Card
       style={{
         height: "100%",
-        marginRight: 15
+        marginRight: 15,
       }}
       bodyStyle={{ height: "100%" }}
       bordered={false}
     >
-      {/*<Row type={"flex"} align={"middle"} justify={"space-between"}>*/}
-      {/*  <Col>*/}
-      {/*    <span className={style.cardTitle}>节点选项</span>*/}
-      {/*  </Col>*/}
-      {/*<Col>*/}
-      {/*  <Input*/}
-      {/*    placeholder="根节点"*/}
-      {/*    onChange={e => setRootNode(e.target.value)}*/}
-      {/*  />*/}
-      {/*</Col>*/}
-      {/*  <Col>*/}
-      {/*    <Button type={"primary"} onClick={connect} style={{ marginRight: 5 }}>*/}
-      {/*      连接*/}
-      {/*    </Button>*/}
-      {/*    <Button type={"primary"} onClick={close}>*/}
-      {/*      断开*/}
-      {/*    </Button>*/}
-      {/*  </Col>*/}
-      {/*</Row>*/}
-      <Row align={"middle"} justify={"space-between"}>
+      <Row
+        align={"middle"}
+        justify={"space-between"}
+        style={{ marginBottom: 20 }}
+      >
         <Col span={14}>
-          <Input
-            style={{ marginBottom: 20 }}
-            addonBefore="URL"
-            placeholder="请输入zookeeper url"
-            value={url}
-            onChange={e => setUrl(e.target.value)}
-          />
+          <Input.Group compact>
+            <Input
+              style={{ width: "70%" }}
+              prefix={<LinkOutlined />}
+              placeholder="请输入地址 例: 127.0.0.1"
+              value={ip}
+              onChange={(e) => setIp(e.target.value)}
+            />
+            <Input
+              style={{ width: "30%" }}
+              placeholder="端口"
+              value={port}
+              onChange={(e) => setPort(e.target.value)}
+            />
+          </Input.Group>
         </Col>
         <Col>
-          <Button
-            type={"primary"}
-            onClick={connect}
-            style={{ marginRight: 5, marginBottom: 20 }}
-          >
+          <Button type={"primary"} onClick={connect} style={{ marginRight: 5 }}>
             连接
           </Button>
           <Button type={"primary"} onClick={close}>
@@ -363,7 +354,7 @@ const Home: React.FC<HomeProps> = props => {
             节点是否自动更新&nbsp;&nbsp;
             <Switch
               checked={isAuto}
-              onChange={checked => {
+              onChange={(checked) => {
                 setIsAuto(checked);
                 // refreshRootTreeNode();
               }}
@@ -390,7 +381,7 @@ const Home: React.FC<HomeProps> = props => {
               icon={<DeleteOutlined />}
               style={{
                 color: treeData.length > 0 ? "red" : undefined,
-                padding: "0 5px"
+                padding: "0 5px",
               }}
               disabled={treeData.length <= 0}
               onClick={onRemove}
@@ -413,14 +404,14 @@ const Home: React.FC<HomeProps> = props => {
             style={{ marginTop: 10 }}
             placeholder="请输入节点名称查询"
             // prefix={<Searc />}
-            onChange={e => setSearchValue(e.target.value)}
+            onChange={(e) => setSearchValue(e.target.value)}
             allowClear
           />
         </Row>
         <div
           style={{
             overflow: "auto",
-            height: "calc(100% - 74px)"
+            height: "calc(100% - 74px)",
           }}
         >
           <Spin spinning={treeLoading} style={{ width: "100%" }}>
@@ -457,7 +448,7 @@ const Home: React.FC<HomeProps> = props => {
                 height: 280,
                 wordBreak: "break-word",
                 overflow: "auto",
-                WebkitUserSelect: "text"
+                WebkitUserSelect: "text",
               }}
             >
               <p>
@@ -468,13 +459,13 @@ const Home: React.FC<HomeProps> = props => {
               </p>
             </div>
             <div style={{ lineHeight: "48px" }}>
-              URL解码：
-              <Switch onChange={checked => setDecodeURI(checked)} />
+              URI解码：
+              <Switch onChange={(checked) => setDecodeURI(checked)} />
             </div>
             <TextArea
               value={nodeData}
               autoSize={{ minRows: 4, maxRows: 4 }}
-              onChange={e => setNodeData(e.target.value)}
+              onChange={(e) => setNodeData(e.target.value)}
             />
             <Row align={"middle"}>
               <Col>
@@ -532,7 +523,7 @@ const Home: React.FC<HomeProps> = props => {
         style={{
           background: "rgba(242,245,247,1)",
           height: "calc(100% - 48px)",
-          padding: 15
+          padding: 15,
         }}
       >
         <Row style={{ position: "unset", height: "100%" }}>
@@ -556,5 +547,5 @@ const Home: React.FC<HomeProps> = props => {
 };
 
 export default connect(({ home }: { home: StateType }) => ({
-  home
-}))(Home);
+  home,
+}))(Home as any);

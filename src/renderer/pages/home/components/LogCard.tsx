@@ -53,7 +53,7 @@ const LogCard: React.FC = () => {
           height: "100%",
           border: "1px solid #E6E6E6",
           borderRadius: 2,
-          WebkitUserSelect: "text"
+          WebkitUserSelect: "text",
         }}
       >
         {log}

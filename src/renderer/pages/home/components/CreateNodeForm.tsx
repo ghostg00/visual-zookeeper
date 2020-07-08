@@ -4,36 +4,33 @@ import { ModalProps } from "antd/es/modal";
 import TextArea from "antd/lib/input/TextArea";
 import { FormProps } from "antd/lib/form/Form";
 
-export interface CreateData {
-  zkNodeName: string;
-  nodeData: string;
-}
-
 export interface CreateNodeFormProps {
   visible: boolean;
   parentNode: string;
   onCancel: ModalProps["onCancel"];
-  onCreate: (values: CreateData) => void;
+  onCreate: (values: { zkNodeName: string; nodeData: string }) => void;
 }
 
 const formItemLayout: FormProps = {
   labelCol: {
     xs: { span: 24 },
-    sm: { span: 4 }
+    sm: { span: 4 },
   },
   wrapperCol: {
     xs: { span: 24 },
-    sm: { span: 20 }
-  }
+    sm: { span: 20 },
+  },
 };
 
-const CreateNodeForm: React.ComponentType<CreateNodeFormProps> = props => {
+const CreateNodeForm: React.FC<CreateNodeFormProps> = (props) => {
   const { visible, parentNode, onCancel, onCreate } = props;
   const [form] = Form.useForm();
-  const onOk = () => {
-    form.validateFields().then(values => {
-      onCreate(values as CreateData);
-    });
+
+  form.resetFields();
+
+  const onOk = async () => {
+    const values = await form.validateFields();
+    onCreate(values as any);
   };
 
   return (
@@ -46,7 +43,7 @@ const CreateNodeForm: React.ComponentType<CreateNodeFormProps> = props => {
       okText={"确定"}
       cancelText={"取消"}
     >
-      <Form form={form} {...formItemLayout}>
+      <Form {...formItemLayout} form={form}>
         <Form.Item label="父节点">
           <span>{parentNode}</span>
         </Form.Item>

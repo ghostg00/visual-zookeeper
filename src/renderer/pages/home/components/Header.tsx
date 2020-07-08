@@ -6,7 +6,7 @@ import device from "current-device";
 import * as Electron from "electron";
 import { CloseOutlined, MinusOutlined } from "@ant-design/icons";
 
-let electron = window.require("electron") as Electron.AllElectron;
+const electron = window.require("electron") as Electron.AllElectron;
 
 const Header: React.FC = () => {
   const renderWindowsHeaderOperate = () => {
@@ -16,7 +16,7 @@ const Header: React.FC = () => {
         <Col
           style={{
             WebkitAppRegion: "no-drag",
-            color: "rgba(255,255,255,1)"
+            color: "rgba(255,255,255,1)",
           }}
         >
           <MinusOutlined
@@ -38,7 +38,7 @@ const Header: React.FC = () => {
         <span
           style={{
             fontSize: 22,
-            color: "rgba(255,255,255,1)"
+            color: "rgba(255,255,255,1)",
           }}
         >
           Visual-Zookeeper

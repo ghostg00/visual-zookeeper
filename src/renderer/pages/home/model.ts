@@ -3,7 +3,7 @@ import ZkClient from "@/utils/ZkClient";
 import { Event } from "node-zookeeper-client";
 import logEvent from "../../utils/LogEvent";
 
-let zkClient = new ZkClient();
+const zkClient = new ZkClient();
 
 export interface StateType {}
 
@@ -60,9 +60,9 @@ const model: ModelType<{}> = {
     },
     *getACL({ payload }, { call }) {
       return yield call([zkClient, zkClient.getACL], payload.path);
-    }
+    },
   },
-  reducers: {}
+  reducers: {},
 };
 
 export default model;

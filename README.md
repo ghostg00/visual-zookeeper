@@ -4,9 +4,8 @@
 
 页面如下：
 
-![图片](https://raw.githubusercontent.com/ghostg00/visual-zookeeper/master/docs/images/visual-zookeeper1.png)
+![图片](https://raw.githubusercontent.com/ghostg00/visual-zookeeper/master/docs/images/visual-zookeeper.png)
 
-![图片](https://raw.githubusercontent.com/ghostg00/visual-zookeeper/master/docs/images/visual-zookeeper2.png)
 
 ---
 
@@ -31,7 +30,7 @@ yarn run dist-mac or yarn run dist-win
 ## TODO
 
 - 🌟 ~~优化页面风格(已完成)~~
-- 🌟 多选删除节点
+- 🌟 ~~多选删除节点~~
 - 🌟 其他功能...
 
 ## 鸣谢
