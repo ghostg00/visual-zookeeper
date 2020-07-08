@@ -4,7 +4,7 @@
 
 页面如下：
 
-![图片](https://raw.githubusercontent.com/ghostg00/visual-zookeeper/master/docs/images/visual-zookeeper.png)
+![图片](https://raw.githubusercontent.com/ghostg00/visual-zookeeper/master/docs/images/visual-zookeeper.jpg)
 
 
 ---
