@@ -9,10 +9,10 @@ export default defineConfig({
   routes: [
     {
       path: "/",
-      component: "../pages/home"
-    }
+      component: "../pages/home",
+    },
   ],
   antd: {},
   dva: {},
-  title: "visual-zookeeper"
+  title: "visual-zookeeper",
 });

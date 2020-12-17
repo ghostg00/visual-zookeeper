@@ -2,8 +2,8 @@ import { Button, Card } from "antd";
 import style from "@/pages/home/style.less";
 import React, { useEffect, useRef, useState } from "react";
 import logEvent from "@/utils/LogEvent";
-import moment from "moment";
 import { DeleteOutlined } from "@ant-design/icons/lib";
+import dayjs from "dayjs";
 
 let logArr: string[] = [];
 
@@ -15,7 +15,7 @@ const LogCard: React.FC = () => {
     logEvent.on("log", (args: any) => {
       logArr.length >= 50 && logArr.shift();
       logArr.push(
-        `${moment().format("YYYY-MM-DD HH:mm:ss SSS")}:   ${args.toString()}`
+        `${dayjs().format("YYYY-MM-DD HH:mm:ss SSS")}:   ${args.toString()}`
       );
       setLog(logArr.join("\n"));
       if (logDiv.current != null) {

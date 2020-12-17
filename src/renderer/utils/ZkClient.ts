@@ -1,5 +1,5 @@
 import { Client, Event, Exception, Stat } from "node-zookeeper-client";
-import moment, { MomentInput } from "moment";
+import dayjs from "dayjs";
 import logEvent from "./LogEvent";
 import { TreeNodeNormal } from "antd/es/tree/Tree";
 import { message } from "antd";
@@ -99,7 +99,8 @@ class ZkClient {
               this.client.getChildren(
                 child,
                 watcher,
-                (error: Error | Exception, children: string[], stat: Stat) => {}
+                (error: Error | Exception, children: string[], stat: Stat) =>
+                  console.error(error, children, stat)
               );
             }
           }
@@ -170,7 +171,8 @@ const hexString = (longBuffer: any) => (longBuffer as Buffer).toString("hex");
 
 const int64 = (longBuffer: any) => parseInt(hexString(longBuffer), 16);
 
-const format = (inp: MomentInput) => moment(inp).format("YYYY-MM-DD HH:mm:ss");
+const format = (inp: dayjs.ConfigType) =>
+  dayjs(inp).format("YYYY-MM-DD HH:mm:ss");
 const extracted = (stat: Stat) => {
   return [
     {
