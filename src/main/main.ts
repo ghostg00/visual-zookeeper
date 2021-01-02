@@ -15,8 +15,8 @@ function createWindow() {
     // resizable: false,
     webPreferences: {
       nodeIntegration: true, // 是否集成 Nodejs
-      webSecurity: false
-    }
+      webSecurity: false,
+    },
   });
 
   if (process.env.NODE_ENV === "development") {
@@ -27,7 +27,7 @@ function createWindow() {
       url.format({
         pathname: path.join(__dirname, "./dist/renderer/index.html"),
         protocol: "file:",
-        slashes: true
+        slashes: true,
       })
     );
   }
