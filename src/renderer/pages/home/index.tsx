@@ -546,6 +546,4 @@ const Home: React.FC<HomeProps> = (props) => {
   );
 };
 
-export default connect(({ home }: { home: StateType }) => ({
-  home,
-}))(Home as any);
+export default Home;
